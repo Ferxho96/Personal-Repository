@@ -1,1 +1,24 @@
+library(tidyverse)  
+library(rstatix)    
+library(performance)
+library(ggpubr)
+
+datos = datos3
+
+str(datos)
+datos$AMH <- as.numeric(datos$AMH)
+
+# Identificación de outliers
+
+boxplot_amh <- ggplot(datos, aes(x = Endometriosis, y = AMH, fill = Endometriosis)) +
+  geom_boxplot(outlier.color = "red", outlier.size = 2) +
+  theme_minimal() + labs(title = "Distribución de AMH", y = "AMH (ng/mL)")
+
+print(boxplot_amh)
+
+boxplot_rfa <- ggplot(datos, aes(x = Endometriosis, y = RFA, fill = Endometriosis)) +
+  geom_boxplot(outlier.color = "red", outlier.size = 2) +
+  theme_minimal() + labs(title = "Distribución de RFA", y = "RFA (Folículos)")
+
+print(boxplot_rfa)
 
