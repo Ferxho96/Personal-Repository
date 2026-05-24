@@ -1,0 +1,623 @@
+# cargar librerías
+library(tidyverse)
+library(janitor)    # clean_names()
+library(psych)      # ICC, describe
+library(car)        # leveneTest
+library(rstatix)    # shapiro_test, get_summary_stats, levene_test, chi-square helpers
+library(ggpubr)     # ggboxplot, stat_compare_means
+library(broom)      # tidy test outputs
+library(skimr) 
+library(readxl)
+library(ggplot2)
+library(scales) 
+
+## Importar bases de datos y agregar la media de cohb
+cohb <- read_excel("C:/Users/chris/Downloads/AEstat/bd.xlsx") %>% clean_names()
+encuesta <- read_excel("C:/Users/chris/Downloads/AEstat/encuesta.xlsx") %>% clean_names()
+
+cohb <- cohb %>%
+  mutate(
+    cohb_mean = rowMeans(select(., cohb1, cohb2), na.rm = TRUE),
+    cohb_sd = apply(select(., cohb1, cohb2), 1, sd, na.rm = TRUE)
+  )
+
+# Evaluar consistencia entre repeticiones
+icc_data <- cohb %>%
+  select(cohb1, cohb2) %>%
+  drop_na()
+
+psych::ICC(icc_data)
+
+#Unir bases de datos
+datos <- encuesta %>% left_join(cohb, by = c("cohb_persona" = "cod"))
+
+#Estadistica descriptiva de varialbles cualitativas 
+
+table(datos$sexo)
+prop.table(table(datos$sexo))*100
+
+table(datos$estado_civil)
+prop.table(table(datos$estado_civil))*100
+
+table(datos$turno_principal)
+prop.table(table(datos$turno_principal))*100
+
+table(datos$toma_descansos)
+prop.table(table(datos$toma_descansos))*100
+
+table(datos$fuma)
+prop.table(table(datos$fuma))*100
+
+table(datos$bebe)
+prop.table(table(datos$bebe))*100
+
+table(datos$enfermedad)
+prop.table(table(datos$enfermedad))*100
+
+table(datos$dolor_cabeza)
+prop.table(table(datos$dolor_cabeza))*100
+
+table(datos$bebe)
+prop.table(table(datos$bebe))*100
+
+table(datos$mareo)
+prop.table(table(datos$mareo))*100
+
+table(datos$somnolencia_excesiva)
+prop.table(table(datos$somnolencia_excesiva))*100
+
+table(datos$dificultad_concentrarse)
+prop.table(table(datos$dificultad_concentrarse))*100
+
+table(datos$nauseas_vomito)
+prop.table(table(datos$nauseas_vomito))*100
+
+table(datos$revisiones_periodicas)
+prop.table(table(datos$revisiones_periodicas))*100
+
+table(datos$funciona_sistventilacion)
+prop.table(table(datos$funciona_sistventilacion))*100
+
+table(datos$capacitacion_gases)
+prop.table(table(datos$capacitacion_gases))*100
+
+## Contraste con datos de la OMS
+
+datoscontraste <- datos %>%
+  mutate(
+    COHb_OMS = case_when(
+      fuma == "No" & cohb_mean <= 2 ~ "Normal_NoFumador",
+      fuma == "No" & cohb_mean > 2 ~ "Alto_NoFumador",
+      fuma == "Si" & cohb_mean <= 10 ~ "Normal_Fumador",
+      fuma == "Si" & cohb_mean > 10 ~ "Alto_Fumador"
+    )
+  )
+
+table(datoscontraste$COHb_OMS)
+prop.table(table(datoscontraste$COHb_OMS))*100
+
+#chisq.test(tab)
+
+data <- datos %>% 
+  mutate(
+    dolor_cabeza_bin = ifelse(dolor_cabeza %in% c("A veces", "Frecuente"), "Si", "No"),
+    mareo_bin        = ifelse(mareo        %in% c("A veces", "Frecuente"), "Si", "No"),
+    somnolencia_bin  = ifelse(somnolencia_excesiva %in% c("A veces", "Frecuente"), "Si", "No"),
+    concentracion_bin = ifelse(dificultad_concentrarse %in% c("A veces", "Frecuente"), "Si", "No"),
+    nausea_bin       = ifelse(nauseas_vomito %in% c("A veces", "Frecuente"), "Si", "No")
+  ) #recodificacion de sintomas
+
+datos = data
+
+data <- data %>% 
+  mutate(across(c(dolor_cabeza_bin, mareo_bin, somnolencia_bin,
+                  concentracion_bin, nausea_bin),
+                ~ factor(. , levels = c("No","Si")))) #convierte a factor
+
+data <- data %>% 
+  mutate(across(c(turno_principal, toma_descansos, revisiones_periodicas,
+                  funciona_sistventilacion, capacitacion_gases,
+                  fuma, bebe, enfermedad),
+                as.factor)) #convierte a factor
+
+vars_explicativas <- c("turno_principal", "toma_descansos", "revisiones_periodicas", 
+"funciona_sistventilacion", "capacitacion_gases", "fuma", "bebe", "enfermedad")
+
+vars_sintomas <- c("dolor_cabeza_bin", "mareo_bin", "somnolencia_bin",
+                   "concentracion_bin", "nausea_bin")
+
+prueba_asociacion <- function(var_exp, var_resp, datos){
+  # Tabla de contingencia sin NAs
+  tab <- table(datos[[var_exp]], datos[[var_resp]], useNA = "no")
+  
+  # Si alguna de las variables solo tiene una categoría observable
+  if (nrow(tab) < 2 | ncol(tab) < 2) {
+    metodo <- "No aplica (una sola categoría)"
+    p_val  <- NA
+  } else {
+    # Si hay celdas en cero, preferimos Fisher
+    if (any(tab == 0)) {
+      metodo <- "Fisher (celdas con 0)"
+      p_val  <- fisher.test(tab)$p.value
+    } else {
+      chi <- chisq.test(tab)
+      if (any(chi$expected < 5)) {
+        metodo <- "Fisher (esperados < 5)"
+        p_val  <- fisher.test(tab)$p.value
+      } else {
+        metodo <- "Chi-cuadrado"
+        p_val  <- chi$p.value
+      }
+    }
+  }
+  
+  data.frame(
+    Variable_explicativa = var_exp,
+    Sintoma              = var_resp,
+    Metodo               = metodo,
+    p_value              = p_val
+  )
+}
+
+library(purrr)
+
+resultados_chi <- purrr::map_dfr(
+  vars_explicativas,
+  ~ purrr::map_dfr(vars_sintomas, prueba_asociacion, var_exp = .x, datos = datos)
+)
+
+resultados_chi
+
+# Nomalidad 
+
+comparar_cohb <- function(var_grupo, base, outcome = "cohb_mean") {
+  
+  # Filtrar filas sin NA en variable de grupo o en COHb
+  df <- base %>%
+    select(all_of(c(var_grupo, outcome))) %>%
+    drop_na()
+  
+  g <- df[[var_grupo]]
+  x <- df[[outcome]]
+  
+  n_grupos <- length(unique(g))
+  
+  # Si hay menos de 2 grupos, no se puede comparar
+  if (n_grupos < 2) {
+    return(tibble(
+      variable      = var_grupo,
+      n_grupos      = n_grupos,
+      test_usado    = "No aplica (solo un grupo)",
+      p_valor       = NA_real_,
+      shapiro_ok    = NA,
+      levene_ok     = NA
+    ))
+  }
+  
+  # --- Normalidad por grupos (Shapiro) ---
+  p_shapiro <- tapply(x, g, function(v){
+    v <- v[!is.na(v)]
+    if (length(v) < 3) return(NA_real_)   # Shapiro requiere n>=3
+    shapiro.test(v)$p.value
+  })
+  
+  shapiro_ok <- all(p_shapiro[!is.na(p_shapiro)] > 0.05)
+  
+  # --- Homogeneidad de varianzas (Levene) ---
+  lev <- leveneTest(x ~ g)
+  p_lev <- lev[1, "Pr(>F)"]
+  levene_ok <- p_lev > 0.05
+  
+  # --- Elegir prueba según número de grupos y supuestos ---
+  if (n_grupos == 2) {
+    if (shapiro_ok && levene_ok) {
+      test <- "t de Student (indep., var iguales)"
+      p    <- t.test(x ~ g, var.equal = TRUE)$p.value
+    } else {
+      test <- "Mann-Whitney (Wilcoxon rank-sum)"
+      p    <- wilcox.test(x ~ g)$p.value
+    }
+    
+  } else { # 3 o más grupos
+    if (shapiro_ok && levene_ok) {
+      test <- "ANOVA una vía"
+      p    <- summary(aov(x ~ g))[[1]][["Pr(>F)"]][1]
+    } else {
+      test <- "Kruskal-Wallis"
+      p    <- kruskal.test(x ~ g)$p.value
+    }
+  }
+  
+  tibble(
+    variable      = var_grupo,
+    n_grupos      = n_grupos,
+    test_usado    = test,
+    p_valor       = p,
+    shapiro_ok    = shapiro_ok,
+    levene_ok     = levene_ok
+  )
+}
+
+vars_grupo <- c(
+  "fuma",
+  "bebe",
+  "enfermedad",
+  "funciona_sistventilacion",
+  "capacitacion_gases",
+  "turno_principal",
+  "dolor_cabeza_bin",
+  "mareo_bin",
+  "somnolencia_bin",
+  "concentracion_bin",
+  "nausea_bin"
+  # si quieres puedes añadir otras aquí
+)
+
+resultados_cohb <- purrr::map_dfr(vars_grupo, comparar_cohb, base = datos)
+
+resultados_cohb
+
+#Correlacion
+
+cor_auto <- function(base, var_x, var_y){
+  
+  x <- base[[var_x]]
+  y <- base[[var_y]]
+  
+  # Quitar NA
+  df <- na.omit(data.frame(x = x, y = y))
+  
+  # Tamaño mínimo
+  if(nrow(df) < 3){
+    return(data.frame(
+      var_x = var_x,
+      var_y = var_y,
+      n = nrow(df),
+      metodo = "No aplica (n<3)",
+      r = NA,
+      p_value = NA,
+      shapiro_x = NA,
+      shapiro_y = NA
+    ))
+  }
+  
+  # Normalidad (Shapiro)
+  p_shap_x <- shapiro.test(df$x)$p.value
+  p_shap_y <- shapiro.test(df$y)$p.value
+  
+  normal_x <- p_shap_x > 0.05
+  normal_y <- p_shap_y > 0.05
+  
+  if(normal_x && normal_y){
+    metodo <- "Pearson"
+    test <- cor.test(df$x, df$y, method = "pearson")
+  } else {
+    metodo <- "Spearman"
+    test <- cor.test(df$x, df$y, method = "spearman")
+  }
+  
+  data.frame(
+    var_x = var_x,
+    var_y = var_y,
+    n = nrow(df),
+    metodo = metodo,
+    r = unname(test$estimate),
+    p_value = test$p.value,
+    shapiro_x = p_shap_x,
+    shapiro_y = p_shap_y
+  )
+}
+
+# Limpieza total del texto
+datos$tiempo_descanso_clean <- datos$tiempo_descanso %>%
+  tolower() %>%              # pasar a minúsculas
+  trimws() %>%               # eliminar espacios al inicio y al final
+  gsub("\\s+", " ", .)       # convertir espacios múltiples en uno solo
+
+# Extraer el número
+datos$tiempo_descanso_min <- as.numeric(gsub("[^0-9]", "", datos$tiempo_descanso_clean))
+
+vars_continuas <- c("anos_experiencia",
+                    "jornada_laboral",
+                    "tiempo_trafico",
+                    "tiempo_descanso_min"
+                    )  # ajusta nombres
+
+resultados_cor <- lapply(vars_continuas, function(v){
+  cor_auto(datos, "cohb_mean", v)
+}) %>% 
+  do.call(rbind, .)
+
+resultados_cor
+
+vars_continuas
+str(datos[, vars_continuas])
+
+## correlaciones por grupos
+
+cor_auto <- function(base, var_x, var_y){
+  
+  df <- base %>%
+    dplyr::select(dplyr::all_of(c(var_x, var_y))) %>%
+    tidyr::drop_na()
+  
+  colnames(df) <- c("x", "y")
+  
+  # Verificar que sean numéricas
+  if (!is.numeric(df$x) | !is.numeric(df$y)) {
+    return(data.frame(
+      var_x     = var_x,
+      var_y     = var_y,
+      n         = nrow(df),
+      metodo    = "No aplica (variable no numérica)",
+      r         = NA,
+      p_value   = NA,
+      shapiro_x = NA,
+      shapiro_y = NA
+    ))
+  }
+  
+  # Tamaño mínimo
+  if (nrow(df) < 3) {
+    return(data.frame(
+      var_x     = var_x,
+      var_y     = var_y,
+      n         = nrow(df),
+      metodo    = "No aplica (n<3)",
+      r         = NA,
+      p_value   = NA,
+      shapiro_x = NA,
+      shapiro_y = NA
+    ))
+  }
+  
+  # Normalidad (Shapiro)
+  p_shap_x <- shapiro.test(df$x)$p.value
+  p_shap_y <- shapiro.test(df$y)$p.value
+  
+  normal_x <- p_shap_x > 0.05
+  normal_y <- p_shap_y > 0.05
+  
+  if (normal_x && normal_y) {
+    metodo <- "Pearson"
+    test   <- cor.test(df$x, df$y, method = "pearson")
+  } else {
+    metodo <- "Spearman"
+    test   <- cor.test(df$x, df$y, method = "spearman")
+  }
+  
+  data.frame(
+    var_x     = var_x,
+    var_y     = var_y,
+    n         = nrow(df),
+    metodo    = metodo,
+    r         = unname(test$estimate),
+    p_value   = test$p.value,
+    shapiro_x = p_shap_x,
+    shapiro_y = p_shap_y
+  )
+}
+
+cor_auto_por_grupo <- function(base, outcome, vars_cont, grupo_var){
+  
+  grupos <- unique(base[[grupo_var]])
+  resultados <- list()
+  
+  for (g in grupos) {
+    
+    sub <- base[base[[grupo_var]] == g, ]
+    
+    for (v in vars_cont) {
+      res <- cor_auto(sub, outcome, v)
+      res$grupo_var   <- grupo_var
+      res$grupo_valor <- as.character(g)
+      resultados[[length(resultados) + 1]] <- res
+    }
+  }
+  
+  do.call(rbind, resultados)
+}
+
+grupo_var <- "turno_principal" 
+
+resultados_cor_grupo <- cor_auto_por_grupo(
+  base      = datos,
+  outcome   = "cohb_mean",
+  vars_cont = vars_continuas,
+  grupo_var = grupo_var   # aquí "fuma"
+)
+
+resultados_cor_grupo
+
+## Gráfico de correlación
+
+# 2) Gráfico de dispersión con línea de tendencia
+cor_exp <- cor.test(datos$anos_experiencia,
+                    datos$cohb_mean,
+                    method = "spearman",
+                    use = "complete.obs")
+
+cor_label <- paste0("Spearman r = ",
+                    round(cor_exp$estimate, 3),
+                    ", p = ",
+                    signif(cor_exp$p.value, 3))
+
+ggplot(datos, aes(x = anos_experiencia, y = cohb_mean)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, linetype = "dashed") +
+  labs(
+    x = "Años de experiencia",
+    y = "Nivel de COHb (%)",
+    title = "Relación entre COHb y años de experiencia",
+    subtitle = cor_label
+  ) +
+  theme_minimal()
+
+## Graficos 
+
+plot_freq_percent <- function(data, vars, titulo, ncol = 2){
+  df <- data %>%
+    select(all_of(vars)) %>%
+    pivot_longer(cols = everything(), names_to = "variable", values_to = "categoria") %>%
+    mutate(
+      categoria = as.factor(categoria),
+      variable  = str_replace_all(variable, "_", " ")
+    ) %>%
+    group_by(variable, categoria) %>%
+    summarise(n = n(), .groups = "drop") %>%
+    group_by(variable) %>%
+    mutate(pct = n / sum(n)) %>%
+    ungroup()
+  
+  ggplot(df, aes(x = categoria, y = pct)) +
+    geom_col() +
+    geom_text(aes(label = percent(pct, accuracy = 0.1)), vjust = -0.2, size = 3) +
+    scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.05)) +
+    labs(
+      title = titulo,
+      x = NULL,
+      y = "Porcentaje (%)"
+    ) +
+    facet_wrap(~variable, scales = "free_x", ncol = ncol) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 0, hjust = 0.5))
+}
+
+vars_tabla3 <- c("turno_principal",
+                 "toma_descansos",
+                 "revisiones_periodicas",
+                 "funciona_sistventilacion",
+                 "capacitacion_gases")
+
+g_tabla3 <- plot_freq_percent(
+  data = datos,
+  vars = vars_tabla3,
+  titulo = "Distribución porcentual de condiciones laborales",
+  ncol = 2
+)
+
+g_tabla3
+
+vars_tabla4 <- c("fuma", "bebe", "enfermedad")
+
+g_tabla4 <- plot_freq_percent(
+  data = datos,
+  vars = vars_tabla4,
+  titulo = "Distribución porcentual de hábitos y antecedentes",
+  ncol = 3
+)
+
+g_tabla4
+
+## Graficos 2 
+labels_vars <- c(
+  sexo = "Sexo",
+  estado_civil = "Estado civil",
+  turno_principal = "Turno principal",
+  toma_descansos = "Toma descansos",
+  fuma = "Fuma",
+  bebe = "Consume alcohol",
+  enfermedad = "Presencia de enfermedad",
+  dolor_cabeza = "Dolor de cabeza",
+  mareo = "Mareo",
+  somnolencia_excesiva = "Somnolencia excesiva",
+  dificultad_concentrarse = "Dificultad para concentrarse",
+  nauseas_vomito = "Náuseas o vómito",
+  revisiones_periodicas = "Revisiones periódicas del bus",
+  funciona_sistventilacion = "Funciona el sistema de ventilación",
+  capacitacion_gases = "Recibió capacitación sobre gases"
+)
+
+plot_categorica <- function(data, var, label_var){
+  df <- data %>%
+    count(.data[[var]], name = "n") %>%
+    mutate(
+      pct = n / sum(n),
+      categoria = as.character(.data[[var]])
+    ) %>%
+    arrange(desc(n))
+  
+  ggplot(df, aes(x = reorder(categoria, -pct), y = pct)) +
+    geom_col() +
+    geom_text(aes(label = paste0("n=", n, " (", percent(pct, accuracy = 0.1), ")")),
+              vjust = -0.25, size = 3) +
+    scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.10)) +
+    labs(
+      title = label_var,
+      x = NULL,
+      y = "Porcentaje (%)"
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 15, hjust = 1))
+}
+
+vars_cualitativas <- c(
+  "sexo", "estado_civil", "turno_principal", "toma_descansos",
+  "fuma", "bebe", "enfermedad",
+  "dolor_cabeza", "mareo", "somnolencia_excesiva",
+  "dificultad_concentrarse", "nauseas_vomito",
+  "revisiones_periodicas", "funciona_sistventilacion", "capacitacion_gases"
+)
+dir.create("graficos_descriptivos", showWarnings = FALSE)
+
+for(v in vars_cualitativas){
+  titulo <- ifelse(v %in% names(labels_vars), labels_vars[[v]], v)
+  
+  g <- plot_categorica(datos, v, titulo)
+  print(g)
+  
+  ggsave(
+    filename = paste0("graficos_descriptivos/", v, ".png"),
+    plot = g,
+    width = 7, height = 4.5, dpi = 300
+  )
+}
+
+## Grafico 3
+
+df_contraste <- datoscontraste %>%
+  count(COHb_OMS, name = "n") %>%
+  mutate(
+    pct = n / sum(n),
+    COHb_OMS_lab = dplyr::recode(
+      COHb_OMS,
+      "Normal_NoFumador" = "Normal (No fumador ≤ 2%)",
+      "Alto_NoFumador"   = "Elevado (No fumador > 2%)",
+      "Normal_Fumador"   = "Normal (Fumador ≤ 10%)",
+      "Alto_Fumador"     = "Elevado (Fumador > 10%)"
+    )
+  )
+
+g_contraste <- ggplot(df_contraste,
+                      aes(x = COHb_OMS_lab, y = pct)) +
+  geom_col() +
+  geom_text(
+    aes(label = paste0("n = ", n, "\n", percent(pct, accuracy = 0.1))),
+    vjust = -0.25,
+    size = 3.5
+  ) +
+  scale_y_continuous(
+    labels = percent_format(accuracy = 1),
+    limits = c(0, 1.10)
+  ) +
+  labs(
+    title = "Clasificación de carboxihemoglobina según criterios OMS",
+    subtitle = "Contraste por condición de fumador",
+    x = NULL,
+    y = "Porcentaje de conductores (%)"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 15, hjust = 1)
+  )
+
+g_contraste
+
+ggsave(
+  filename = "contraste_COHb_OMS.png",
+  plot = g_contraste,
+  width = 8,
+  height = 5,
+  dpi = 300
+)
+
