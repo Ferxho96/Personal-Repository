@@ -1,0 +1,2044 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>AgroPapa – Guía de Cultivo</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --earth: #2d1a0e;
+    --soil: #5c3317;
+    --bark: #7a4a22;
+    --leaf: #3a6b35;
+    --leaf-light: #5d9e56;
+    --sun: #e8a020;
+    --cream: #f5ede0;
+    --parchment: #faf4ea;
+    --mist: #e8f0e4;
+    --red-warning: #c0392b;
+    --sky: #4a90b8;
+    --harvest: #d4850a;
+    --shadow: rgba(45,26,14,0.18);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--parchment);
+    color: var(--earth);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== HEADER ===== */
+  .app-header {
+    background: linear-gradient(135deg, var(--leaf) 0%, var(--earth) 100%);
+    padding: 48px 20px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .app-header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    background: var(--sun);
+    opacity: 0.12;
+    border-radius: 50%;
+  }
+  .app-header::after {
+    content: '';
+    position: absolute;
+    bottom: -20px; left: 30%;
+    width: 100px; height: 100px;
+    background: var(--leaf-light);
+    opacity: 0.15;
+    border-radius: 50%;
+  }
+  .header-badge {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--sun);
+    margin-bottom: 6px;
+    position: relative;
+    z-index: 1;
+  }
+  .app-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 34px;
+    font-weight: 900;
+    color: white;
+    line-height: 1.1;
+    position: relative;
+    z-index: 1;
+  }
+  .app-subtitle {
+    font-size: 13px;
+    color: rgba(255,255,255,0.65);
+    margin-top: 6px;
+    font-weight: 300;
+    position: relative;
+    z-index: 1;
+  }
+  .emoji-leaf { font-size: 28px; }
+
+  /* ===== NAV TABS ===== */
+  .nav-tabs {
+    display: flex;
+    background: var(--earth);
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 12px var(--shadow);
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tab {
+    flex: 0 0 auto;
+    padding: 13px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+    text-transform: uppercase;
+  }
+  .nav-tab.active {
+    color: var(--sun);
+    border-bottom-color: var(--sun);
+  }
+
+  /* ===== PAGES ===== */
+  .page { display: none; padding-bottom: 40px; animation: fadeUp 0.3s ease; }
+  .page.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== SECTION HEADERS ===== */
+  .section-header {
+    padding: 24px 20px 12px;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--earth);
+  }
+  .section-desc {
+    font-size: 13px;
+    color: var(--bark);
+    margin-top: 4px;
+    line-height: 1.5;
+    font-weight: 300;
+  }
+
+  /* ===== CARDS ===== */
+  .card {
+    background: white;
+    border-radius: var(--radius);
+    margin: 0 16px 12px;
+    box-shadow: 0 2px 16px var(--shadow);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 16px 18px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--mist);
+    cursor: pointer;
+  }
+  .card-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .card-title { font-size: 15px; font-weight: 600; color: var(--earth); }
+  .card-subtitle { font-size: 12px; color: var(--bark); margin-top: 2px; font-weight: 300; }
+  .chevron { margin-left: auto; color: var(--bark); font-size: 16px; transition: transform 0.25s; }
+  .card.expanded .chevron { transform: rotate(90deg); }
+  .card-body { padding: 16px 18px; display: none; }
+  .card.expanded .card-body { display: block; }
+  .card-body p { font-size: 14px; line-height: 1.7; color: #444; margin-bottom: 10px; }
+  .card-body p:last-child { margin-bottom: 0; }
+
+  /* ===== CALCULATOR ===== */
+  .calc-box {
+    background: white;
+    border-radius: var(--radius);
+    margin: 0 16px 14px;
+    box-shadow: 0 2px 16px var(--shadow);
+    overflow: hidden;
+  }
+  .calc-header {
+    background: linear-gradient(135deg, var(--leaf), var(--leaf-light));
+    padding: 16px 18px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .calc-header-title { font-size: 16px; font-weight: 600; color: white; }
+  .calc-header-icon { font-size: 22px; }
+  .calc-content { padding: 18px; }
+
+  .field-group { margin-bottom: 16px; }
+  .field-label { font-size: 12px; font-weight: 600; color: var(--bark); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .field-row { display: flex; gap: 8px; align-items: center; }
+  .field-input {
+    flex: 1;
+    padding: 12px 14px;
+    border: 2px solid var(--mist);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--earth);
+    background: var(--parchment);
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  .field-input:focus { outline: none; border-color: var(--leaf); }
+  .field-select {
+    padding: 12px 14px;
+    border: 2px solid var(--mist);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--earth);
+    background: var(--parchment);
+    -webkit-appearance: none;
+    flex: 1;
+  }
+  .field-select:focus { outline: none; border-color: var(--leaf); }
+  .field-unit {
+    font-size: 13px;
+    color: var(--bark);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .calc-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--leaf), var(--leaf-light));
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: opacity 0.2s, transform 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .calc-btn:active { opacity: 0.88; transform: scale(0.98); }
+
+  .calc-result {
+    margin-top: 14px;
+    padding: 14px;
+    background: var(--mist);
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--leaf);
+    display: none;
+  }
+  .calc-result.show { display: block; }
+  .result-title { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--leaf); margin-bottom: 8px; }
+  .result-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(90,150,80,0.15); }
+  .result-row:last-child { border-bottom: none; }
+  .result-key { font-size: 13px; color: #555; }
+  .result-val { font-size: 15px; font-weight: 700; color: var(--earth); }
+  .result-note { font-size: 12px; color: var(--bark); margin-top: 8px; line-height: 1.5; font-style: italic; }
+
+  /* ===== TIMELINE / CALENDAR ===== */
+  .timeline { padding: 0 16px; }
+  .timeline-intro { font-size: 13px; color: var(--bark); line-height: 1.6; margin-bottom: 16px; padding: 12px 14px; background: white; border-radius: var(--radius-sm); box-shadow: 0 1px 8px var(--shadow); }
+
+  .phase-block {
+    background: white;
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    box-shadow: 0 2px 12px var(--shadow);
+    overflow: hidden;
+  }
+  .phase-title-bar {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+  }
+  .phase-dot {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .phase-info { flex: 1; }
+  .phase-name { font-size: 14px; font-weight: 600; }
+  .phase-days { font-size: 12px; font-weight: 400; opacity: 0.7; margin-top: 1px; }
+  .phase-actions {
+    padding: 0 16px 16px;
+    display: none;
+  }
+  .phase-block.open .phase-actions { display: block; }
+  .phase-block.open .chevron { transform: rotate(90deg); }
+
+  .action-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--mist);
+  }
+  .action-item:last-child { border-bottom: none; }
+  .action-bullet {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .action-text { font-size: 13px; line-height: 1.5; color: #444; }
+  .action-tag {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    margin-bottom: 3px;
+  }
+
+  /* ===== FERTILIZATION TABLE ===== */
+  .fert-table {
+    background: white;
+    border-radius: var(--radius);
+    margin: 0 16px 12px;
+    box-shadow: 0 2px 16px var(--shadow);
+    overflow: hidden;
+  }
+  .fert-table-header {
+    background: linear-gradient(135deg, var(--harvest), var(--sun));
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .fert-table-title { font-size: 15px; font-weight: 600; color: white; }
+  .fert-table-body { padding: 14px 16px; }
+
+  .combo-block {
+    background: var(--parchment);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    margin-bottom: 10px;
+    border-left: 4px solid var(--harvest);
+  }
+  .combo-title { font-size: 13px; font-weight: 700; color: var(--earth); margin-bottom: 8px; }
+  .combo-rows {}
+  .combo-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 0;
+    font-size: 12px;
+    border-bottom: 1px dashed rgba(0,0,0,0.08);
+  }
+  .combo-row:last-child { border-bottom: none; }
+  .combo-product { color: #555; flex: 1; }
+  .combo-amounts { display: flex; gap: 6px; }
+  .amount-pill {
+    background: var(--leaf);
+    color: white;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .amount-pill.ha { background: var(--leaf); }
+  .amount-pill.cuadra { background: var(--bark); }
+  .amount-pill.solar { background: var(--sky); }
+
+  .unit-legend {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #666; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+  /* ===== VARIETIES ===== */
+  .variety-grid { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
+  .variety-card {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: 0 2px 12px var(--shadow);
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .variety-card-header {
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .variety-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .badge-muy-resistente { background: #d4edda; color: #1d5e2e; }
+  .badge-resistente { background: #cfe8d4; color: #2a6e40; }
+  .badge-susceptible { background: #fde8d0; color: #7a3800; }
+  .badge-muy-susceptible { background: #fdd; color: #8b0000; }
+  .badge-nativa { background: #f0e6d3; color: #6b4220; }
+  .badge-precoz { background: #e3f6d8; color: #2e6b10; }
+  .badge-intermedia { background: #ffeab8; color: #7a5000; }
+  .badge-tardia { background: #fdd0d0; color: #7a1010; }
+
+  .variety-name { font-size: 15px; font-weight: 700; color: var(--earth); }
+  .variety-type { font-size: 11px; color: var(--bark); margin-top: 1px; }
+  .variety-details { padding: 0 16px 14px; display: none; border-top: 1px solid var(--mist); }
+  .variety-card.open .variety-details { display: block; }
+  .variety-card.open .chevron { transform: rotate(90deg); }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .detail-item { background: var(--parchment); border-radius: 8px; padding: 10px; }
+  .detail-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--bark); margin-bottom: 3px; }
+  .detail-value { font-size: 13px; font-weight: 600; color: var(--earth); }
+  .variety-use { font-size: 12px; color: #555; margin-top: 10px; line-height: 1.5; }
+
+  /* ===== PLAGAS / ENFERMEDADES ===== */
+  .pest-card {
+    background: white;
+    border-radius: var(--radius);
+    margin: 0 16px 10px;
+    box-shadow: 0 2px 12px var(--shadow);
+    overflow: hidden;
+  }
+  .pest-header {
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer;
+  }
+  .pest-icon { font-size: 24px; }
+  .pest-name { font-size: 14px; font-weight: 700; color: var(--earth); }
+  .pest-scientific { font-size: 11px; color: var(--bark); font-style: italic; margin-top: 1px; }
+  .pest-body { padding: 0 16px 14px; display: none; border-top: 1px solid var(--mist); }
+  .pest-card.open .pest-body { display: block; }
+  .pest-card.open .chevron { transform: rotate(90deg); }
+  .pest-section { margin-top: 10px; }
+  .pest-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--bark); margin-bottom: 5px; }
+  .pest-section p { font-size: 13px; color: #444; line-height: 1.6; }
+  .pest-section ul { list-style: none; }
+  .pest-section ul li { font-size: 13px; color: #444; padding: 3px 0; padding-left: 14px; position: relative; line-height: 1.5; }
+  .pest-section ul li::before { content: '•'; position: absolute; left: 0; color: var(--leaf); font-weight: 700; }
+
+  /* ===== ALERT TAGS ===== */
+  .alert-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+  .tag-bio { background: #d4f5d4; color: #1a5e1a; }
+  .tag-quim { background: #ffd7c4; color: #7a2000; }
+  .tag-cultural { background: #d4e8ff; color: #1a3e6e; }
+  .tag-alert { background: #ffeaa0; color: #6b4200; }
+
+  /* ===== TIPS ===== */
+  .tip-box {
+    background: var(--mist);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin: 4px 16px 10px;
+    border-left: 4px solid var(--leaf);
+    font-size: 13px;
+    color: var(--earth);
+    line-height: 1.6;
+  }
+  .tip-box strong { color: var(--leaf); }
+
+  /* ===== SEEDS CALC SPECIAL ===== */
+  .seeds-table-wrap { overflow-x: auto; margin-top: 10px; }
+  table.seeds-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.seeds-table th {
+    background: var(--leaf);
+    color: white;
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  table.seeds-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--mist);
+    color: #444;
+  }
+  table.seeds-table tr:nth-child(even) td { background: var(--parchment); }
+
+  /* ===== FUNGICIDES TABLE ===== */
+  .fung-section { margin-bottom: 14px; }
+  .fung-section-title {
+    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+    color: white; background: var(--soil); padding: 6px 10px; border-radius: 6px;
+    margin-bottom: 8px;
+  }
+  .fung-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 10px; background: var(--parchment); border-radius: 8px;
+    margin-bottom: 4px; gap: 8px;
+  }
+  .fung-name { font-size: 12px; color: #444; flex: 1; }
+  .fung-dose { font-size: 12px; font-weight: 700; color: var(--earth); white-space: nowrap; }
+
+  /* ===== RIEGO SECTION ===== */
+  .riego-stat {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 14px; background: white; border-radius: var(--radius-sm);
+    box-shadow: 0 1px 8px var(--shadow); margin-bottom: 8px;
+  }
+  .riego-stat-icon { font-size: 28px; }
+  .riego-stat-val { font-size: 22px; font-weight: 800; color: var(--sky); font-family: 'Playfair Display', serif; }
+  .riego-stat-desc { font-size: 12px; color: var(--bark); }
+
+  /* ===== BOTTOM SPACING ===== */
+  .spacer { height: 20px; }
+
+  /* ===== SEARCH FILTER ===== */
+  .search-wrap { padding: 12px 16px 0; }
+  .search-input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 2px solid var(--mist);
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    background: white;
+    color: var(--earth);
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { outline: none; border-color: var(--leaf); }
+
+  /* ===== SAD SYSTEM ===== */
+  .sad-box {
+    background: white;
+    border-radius: var(--radius);
+    margin: 0 16px 12px;
+    box-shadow: 0 2px 16px var(--shadow);
+    padding: 18px;
+  }
+  .sad-title { font-size: 15px; font-weight: 700; color: var(--earth); margin-bottom: 4px; }
+  .sad-desc { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 14px; }
+  .sad-wheel-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .sad-wheel {
+    flex: 1; padding: 10px 12px; border-radius: var(--radius-sm);
+    font-size: 12px; font-weight: 600; line-height: 1.4;
+  }
+  .sad-green { background: #d4f5d4; color: #1a5e1a; border-left: 4px solid #28a745; }
+  .sad-yellow { background: #fffacc; color: #7a6000; border-left: 4px solid #ffc107; }
+  .sad-red { background: #ffe5e5; color: #7a0000; border-left: 4px solid #dc3545; }
+  .sad-label { font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase; opacity: 0.7; margin-bottom: 3px; }
+  .sad-var-list { font-size: 11px; font-weight: 400; }
+
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="app-header">
+  <div class="header-badge">📖 INIAP · Manual 3.ª edición</div>
+  <div class="app-title">🥔 AgroPapa</div>
+  <div class="app-subtitle">Guía técnica de cultivo de papa · Ecuador Sierra</div>
+</div>
+
+<!-- NAV -->
+<div class="nav-tabs" id="navTabs">
+  <div class="nav-tab active" onclick="showPage('calc')">Calculadoras</div>
+  <div class="nav-tab" onclick="showPage('calendario')">Calendario</div>
+  <div class="nav-tab" onclick="showPage('fertilizacion')">Fertilización</div>
+  <div class="nav-tab" onclick="showPage('variedades')">Variedades</div>
+  <div class="nav-tab" onclick="showPage('plagas')">Plagas</div>
+  <div class="nav-tab" onclick="showPage('enfermedades')">Enfermedades</div>
+  <div class="nav-tab" onclick="showPage('riego')">Riego</div>
+</div>
+
+<!-- ===================================== -->
+<!-- PAGE: CALCULADORAS -->
+<!-- ===================================== -->
+<div class="page active" id="page-calc">
+  <div class="section-header">
+    <div class="section-title">Calculadoras de Campo</div>
+    <div class="section-desc">Ingrese sus datos y obtenga estimaciones basadas en el Manual INIAP.</div>
+  </div>
+
+  <!-- CALCULADORA SEMILLA -->
+  <div class="calc-box">
+    <div class="calc-header">
+      <div class="calc-header-icon">🌱</div>
+      <div class="calc-header-title">Cantidad de Semilla</div>
+    </div>
+    <div class="calc-content">
+      <div class="field-group">
+        <div class="field-label">Superficie a sembrar</div>
+        <div class="field-row">
+          <input class="field-input" type="number" id="seed-area" placeholder="Ej: 2" min="0.01" step="0.01">
+          <select class="field-select" id="seed-unit" style="max-width:120px;">
+            <option value="ha">Hectáreas</option>
+            <option value="cuadra">Cuadras</option>
+            <option value="solar">Solares</option>
+            <option value="cantero">Canteros</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Clase de semilla</div>
+        <select class="field-select" id="seed-class" style="width:100%;">
+          <option value="small">Pequeña (40–60 g): 16–24 qq/ha</option>
+          <option value="med" selected>Mediana (61–90 g): 24–37 qq/ha</option>
+          <option value="big">Grande (91–120 g): 36–56 qq/ha</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Distancia entre plantas</div>
+        <select class="field-select" id="seed-dist" style="width:100%;">
+          <option value="30">30 cm (recomendado)</option>
+          <option value="40">40 cm</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Distancia entre surcos</div>
+        <select class="field-select" id="seed-row" style="width:100%;">
+          <option value="1.00">1.00 m</option>
+          <option value="1.20" selected>1.20 m</option>
+          <option value="1.30">1.30 m</option>
+          <option value="1.40">1.40 m</option>
+        </select>
+      </div>
+      <button class="calc-btn" onclick="calcSeed()">Calcular cantidad de semilla</button>
+      <div class="calc-result" id="seed-result">
+        <div class="result-title">📦 Resultado estimado</div>
+        <div id="seed-result-body"></div>
+        <div class="result-note">* Los valores son aproximados según el Manual INIAP (Cuadro 1). Use semilla de calidad, libre de plagas y de buena brotación.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALCULADORA FERTILIZANTE -->
+  <div class="calc-box">
+    <div class="calc-header">
+      <div class="calc-header-icon">⚗️</div>
+      <div class="calc-header-title">Fertilizante a la Siembra</div>
+    </div>
+    <div class="calc-content">
+      <div class="field-group">
+        <div class="field-label">Superficie</div>
+        <div class="field-row">
+          <input class="field-input" type="number" id="fert-area" placeholder="Ej: 1" min="0.01" step="0.01">
+          <select class="field-select" id="fert-unit" style="max-width:120px;">
+            <option value="ha">Hectáreas</option>
+            <option value="cuadra">Cuadras</option>
+            <option value="solar">Solares</option>
+            <option value="cantero">Canteros</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Combinación de fertilizante</div>
+        <select class="field-select" id="fert-combo" style="width:100%;">
+          <option value="1">Combinación 1: 10-30-10 + Nitrato de calcio</option>
+          <option value="2">Combinación 2: 18-46-00 + Muriato + Nitrato Ca</option>
+          <option value="3">Combinación 3: Fertipapa Siembra + Nitrato Ca</option>
+        </select>
+      </div>
+      <button class="calc-btn" onclick="calcFert()">Calcular fertilizante</button>
+      <div class="calc-result" id="fert-result">
+        <div class="result-title">⚗️ Fertilizante requerido</div>
+        <div id="fert-result-body"></div>
+        <div class="result-note">* Rinde ~600 qq/ha con inversión completa. Para menor inversión, aplique la mitad (300–350 qq/ha). Fuente: Cuadro 4, Manual INIAP.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALCULADORA FECHAS CLAVE -->
+  <div class="calc-box">
+    <div class="calc-header">
+      <div class="calc-header-icon">📅</div>
+      <div class="calc-header-title">Fechas Clave del Cultivo</div>
+    </div>
+    <div class="calc-content">
+      <div class="field-group">
+        <div class="field-label">Fecha de siembra</div>
+        <input class="field-input" type="date" id="sowing-date">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Variedad</div>
+        <select class="field-select" id="variety-precocity" style="width:100%;">
+          <option value="precoz">Precoz (&lt;120 días): Libertad, Yema de huevo</option>
+          <option value="intermedia" selected>Intermedia (120–150 días): Fripapa, Victoria, Natividad...</option>
+          <option value="tardia">Tardía (&gt;150 días): Superchola, Gabriela, Cecilia...</option>
+        </select>
+      </div>
+      <button class="calc-btn" onclick="calcDates()">Calcular fechas clave</button>
+      <div class="calc-result" id="dates-result">
+        <div class="result-title">📅 Cronograma del cultivo</div>
+        <div id="dates-result-body"></div>
+        <div class="result-note">* Los tiempos varían según variedad, clima y altitud. Monitoree el cultivo regularmente.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip-box">
+    <strong>💡 Consejo:</strong> Siempre realice un análisis de suelo <strong>1 mes antes</strong> de la siembra para optimizar la fertilización. Contacte el Laboratorio de Suelos del INIAP: <strong>02-3007284</strong>.
+  </div>
+</div>
+
+<!-- ===================================== -->
+<!-- PAGE: CALENDARIO -->
+<!-- ===================================== -->
+<div class="page" id="page-calendario">
+  <div class="section-header">
+    <div class="section-title">Etapas Fenológicas</div>
+    <div class="section-desc">Toque cada etapa para ver las prácticas agronómicas recomendadas.</div>
+  </div>
+
+  <div class="timeline">
+    <div class="timeline-intro">
+      El cultivo de papa tiene <strong>7 etapas fenológicas</strong>: 4 vegetativas (V0–V3), 2 reproductivas (R4–R5) y 1 de maduración (R6). Desde la siembra hasta la cosecha: 4 a 6 meses según la variedad.
+    </div>
+
+    <!-- V0 -->
+    <div class="phase-block" onclick="togglePhase(this)">
+      <div class="phase-title-bar">
+        <div class="phase-dot" style="background:#e8f5e9; color:#2e7d32;">🌿</div>
+        <div class="phase-info">
+          <div class="phase-name" style="color:#2e7d32;">V0 · Brotación de semilla</div>
+          <div class="phase-days">Antes de siembra</div>
+        </div>
+        <div class="chevron">›</div>
+      </div>
+      <div class="phase-actions">
+        <div class="action-item">
+          <div class="action-bullet" style="background:#e8f5e9; color:#2e7d32;">✓</div>
+          <div class="action-text"><span class="action-tag" style="background:#e8f5e9;color:#2e7d32;">SEMILLA</span><br>Seleccione semilla sana, libre de plagas y enfermedades. Peso óptimo: 40–120 g. Almacene a 12 °C en silo verdeador con luz difusa.</div>
+        </div>
+        <div class="action-item">
+          <div class="action-bullet" style="background:#e8f5e9; color:#2e7d32;">✓</div>
+          <div class="action-text"><span class="action-tag" style="background:#e8f5e9;color:#2e7d32;">TERRENO</span><br>Escoja lotes de rompe o descansados ≥3 años, con suelo negro-andino, pendiente moderada. Evite zonas propensas a heladas en terrenos planos.</div>
+        </div>
+        <div class="action-item">
+          <div class="action-bullet" style="background:#e8f5e9; color:#2e7d32;">✓</div>
+          <div class="action-text"><span class="action-tag" style="background:#e8f5e9;color:#2e7d32;">SUELO</span><br>Arado (2 pases, 30 cm profundidad), cruza perpendicular, rastra. Aplique abono orgánico bien descompuesto: <strong>5 t/ha</strong> durante el arado.</div>
+        </div>
+        <div class="action-item">
+          <div class="action-bullet" style="background:#fce8e6; color:#c62828;">⚠</div>
+          <div class="action-text"><span class="action-tag" style="background:#fce8e6;color:#c62828;">PLAGA</span><br>Coloque trampas para gusano blanco <strong>2 meses antes</strong> de la siembra. Cada 10 m², renuévalas cada 10 días.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- V1-V2 -->
+    <div class="phase-block" onclick="togglePhase(this)">
+      <div class="phase-title-bar">
+        <div class="phase-dot" style="background:#f1f8e9; color:#558b2f;">🌱</div>
+        <div class="phase-info">
+          <div class="phase-name" style="color:#558b2f;">V1–V2 · Emergencia y Desarrollo</div>
+          <div class="phase-days">Días 16–90 después de siembra</div>
+        </div>
+        <div class="chevron">›</div>
+      </div>
+      <div class="phase-actions">
+        <div class="action-item">
+          <div class="action-bullet" style="background:#e3f2fd; color:#1565c0;">✓</div>
+          <div class="action-text"><span class="action-tag" style="background:#e3f2fd;color:#1565c0;">DÍA ~45</span><br><strong>Rascadillo:</strong> Remueva tierra alrededor de la planta (8–10 cm de altura), controle malezas y airee el cultivo. Aplique fertilizante complementario antes.</div>
+        </div>
+        <div class="action-item">
+          <div class="action-bullet" style="background:#e3f2fd; color:#1565c0;">✓</div>
+          <div class="action-text"><span class="action-tag" style="background:#e3f2fd;color:#1565c0;">DÍA ~60</span><br><strong>Medio aporque:</strong> Acumule tierra en la base, cubra estolones, elimine malezas.</div>
+        </div>
+        <div class="action-item">
+          <div class="action-bullet" style="background:#e3f2fd; color:#1565c0;">✓</div>
+          <div class="action-text"><span class="action-tag" style="background:#e3f2fd;color:#1565c0;">DÍA 60–90</span><br><strong>Aporque definitivo:</strong> Cubra estolones completamente. Haga aporque cruzado para evitar entrada de polillas. En tardías, hasta día 90.</div>
+        </div>
+        <div class="action-item">
+          <div class="action-bullet" style="background:#fce8e6; color:#c62828;">⚠</div>
+          <div class="action-text"><span class="action-tag" style="background:#fce8e6;color:#c62828;">VIGILAR</span><br>Monitoree: pulguilla, trips, psílido (punta morada), lancha temprana. Inicie controles preventivos con fungicidas protectantes.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- V3 -->
+    <div class="phase-block" onclick="togglePhase(this)">
+      <div class="phase-title-bar">
+        <div class="phase-dot" style="background:#fff3e0; color:#e65100;">🌸</div>
+        <div class="phase-info">
+          <div class="phase-name" style="color:#e65100;">V3 · Floración e inicio tuberización</div>
+          <div class="phase-days">~Días 90–120 (3 a 3.5 meses)</div>
+        </div>
+        <div class="chevron">›</div>
+      </div>
+      <div class="phase-actions">
+        <div class="action-item">
+          <div class="action-bullet" style="background:#fff3e0; color:#e65100;">✓</div>
+          <div class="action-text"><span class="action-tag" style="background:#fff3e0;color:#e65100;">FLORACIÓN</span><br>Inicio con botones florales. La tuberización comienza simultáneamente. Asegure humedad suficiente — etapa crítica para el rendimiento.</div>
+        </div>
+        <div class="action-item">
+          <div class="action-bullet" style="background:#e8f5e9; color:#2e7d32;">✓</div>
+          <div class="action-text"><span class="action-tag" style="background:#e8f5e9;color:#2e7d32;">FOLIAR</span><br><strong>Fertilización foliar:</strong> 3 aplicaciones cada 21 días desde inicio de floración. Use dosis según etiqueta del producto.</div>
+        </div>
+        <div class="action-item">
+          <div class="action-bullet" style="background:#fce8e6; color:#c62828;">⚠</div>
+          <div class="action-text"><span class="action-tag" style="background:#fce8e6;color:#c62828;">ALTO RIESGO</span><br>Máximo riesgo de lancha. Aplique fungicidas sistémicos al ver primeras manchas; preventivos cada 6–8 días si hay neblina/lluvia. Monitoree psílido 2x/semana.</div>
+        </div>
+        <div class="action-item">
+          <div class="action-bullet" style="background:#fce8e6; color:#c62828;">⚠</div>
+          <div class="action-text"><span class="action-tag" style="background:#fce8e6;color:#c62828;">VIRUS/BACT</span><br>Elimine plantas con síntomas de virus (enrollamiento, mosaico), pie negro, punta morada. Retire del campo inmediatamente.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- R4 -->
+    <div class="phase-block" onclick="togglePhase(this)">
+      <div class="phase-title-bar">
+        <div class="phase-dot" style="background:#fce4ec; color:#880e4f;">🌺</div>
+        <div class="phase-info">
+          <div class="phase-name" style="color:#880e4f;">R4 · Fin floración, fin tuberización</div>
+          <div class="phase-days">Días 120–151 (4 a 5 meses)</div>
+        </div>
+        <div class="chevron">›</div>
+      </div>
+      <div class="phase-actions">
+        <div class="action-item">
+          <div class="action-bullet" style="background:#fce4ec; color:#880e4f;">✓</div>
+          <div class="action-text"><span class="action-tag" style="background:#fce4ec;color:#880e4f;">ETAPA</span><br>Todos los botones florales han reventado. Los estolones terminan de formar tubérculos e inicia el engrose. Período 137–151 dds.</div>
+        </div>
+        <div class="action-item">
+          <div class="action-bullet" style="background:#fce8e6; color:#c62828;">⚠</div>
+          <div class="action-text"><span class="action-tag" style="background:#fce8e6;color:#c62828;">VIGILAR</span><br>Roya (pústulas anaranjadas), oidiosis (manchas blancas pulverulentas). Aplique propiconazole o epoxiconazol+pyraclostrobin al inicio de floración.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- R5 -->
+    <div class="phase-block" onclick="togglePhase(this)">
+      <div class="phase-title-bar">
+        <div class="phase-dot" style="background:#e8eaf6; color:#283593;">🥔</div>
+        <div class="phase-info">
+          <div class="phase-name" style="color:#283593;">R5 · Engrose de tubérculos</div>
+          <div class="phase-days">Días 90–150 (varía por variedad)</div>
+        </div>
+        <div class="chevron">›</div>
+      </div>
+      <div class="phase-actions">
+        <div class="action-item">
+          <div class="action-bullet" style="background:#e8eaf6; color:#283593;">✓</div>
+          <div class="action-text"><span class="action-tag" style="background:#e8eaf6;color:#283593;">CRÍTICO</span><br>Período más sensible al déficit hídrico: días 72–125. Garantice riego o lluvia suficiente. Un déficit aquí reduce directamente el rendimiento.</div>
+        </div>
+        <div class="action-item">
+          <div class="action-bullet" style="background:#fce8e6; color:#c62828;">⚠</div>
+          <div class="action-text"><span class="action-tag" style="background:#fce8e6;color:#c62828;">ENFERMEDADES</span><br>Rhizoctonia (costra negra), sarna polvorienta, sarna común, lanosa. Controle con semilla desinfectada y suelos bien drenados.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- R6 -->
+    <div class="phase-block" onclick="togglePhase(this)">
+      <div class="phase-title-bar">
+        <div class="phase-dot" style="background:#efebe9; color:#4e342e;">🌾</div>
+        <div class="phase-info">
+          <div class="phase-name" style="color:#4e342e;">R6 · Maduración y Cosecha</div>
+          <div class="phase-days">Días 127–200 (4 a 6 meses total)</div>
+        </div>
+        <div class="chevron">›</div>
+      </div>
+      <div class="phase-actions">
+        <div class="action-item">
+          <div class="action-bullet" style="background:#efebe9; color:#4e342e;">✓</div>
+          <div class="action-text"><span class="action-tag" style="background:#efebe9;color:#4e342e;">COSECHA</span><br>Plantas amarillas y secas. Prueba de madurez: saque un tubérculo y presiónelo — si no se pela la piel, está listo. Coseche en días soleados.</div>
+        </div>
+        <div class="action-item">
+          <div class="action-bullet" style="background:#efebe9; color:#4e342e;">✓</div>
+          <div class="action-text"><span class="action-tag" style="background:#efebe9;color:#4e342e;">CLASIFICACIÓN</span><br>Chaupi (&gt;200 g), Gruesa (100–200 g), 1ª redroja (80–100 g), 2ª fina/pepa (40–80 g), 3ª cuchi (&lt;40 g). Sacos de 100 lb (1 quintal).</div>
+        </div>
+        <div class="action-item">
+          <div class="action-bullet" style="background:#efebe9; color:#4e342e;">✓</div>
+          <div class="action-text"><span class="action-tag" style="background:#efebe9;color:#4e342e;">SEMILLA</span><br>Seleccione tubérculos semilla de plantas marcadas (selección positiva). Almacene a 12 °C, 80–85% humedad, en silo verdeador.</div>
+        </div>
+        <div class="action-item">
+          <div class="action-bullet" style="background:#fce8e6; color:#c62828;">⚠</div>
+          <div class="action-text"><span class="action-tag" style="background:#fce8e6;color:#c62828;">POLILLA</span><br>Papa con daño de polilla: sumerja en agua 3 días O entierre a 70 cm. No deje tubérculos contaminados al aire libre — foco de infección.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+</div>
+
+<!-- ===================================== -->
+<!-- PAGE: FERTILIZACIÓN -->
+<!-- ===================================== -->
+<div class="page" id="page-fertilizacion">
+  <div class="section-header">
+    <div class="section-title">Fertilización</div>
+    <div class="section-desc">Combinaciones recomendadas por el INIAP para siembra y aporque.</div>
+  </div>
+
+  <div class="tip-box">
+    <strong>⚗️ Recuerde:</strong> El análisis de suelo determina las cantidades exactas. Use el cuadro siguiente como referencia cuando no disponga de análisis. Con fertilización completa puede cosechar ~600 qq/ha.
+  </div>
+
+  <!-- TABLA SIEMBRA -->
+  <div class="fert-table">
+    <div class="fert-table-header">
+      <div style="font-size:22px;">🌱</div>
+      <div class="fert-table-title">Fertilización a la Siembra</div>
+    </div>
+    <div class="fert-table-body">
+      <div class="unit-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--leaf);"></div>Hectárea</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--bark);"></div>Cuadra</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--sky);"></div>Solar</div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <div class="combo-block">
+          <div class="combo-title">Combinación 1 · 10-30-10 + Nitrato de calcio</div>
+          <div class="combo-row">
+            <div class="combo-product">10–30–10 (MAP)</div>
+            <div class="combo-amounts">
+              <div class="amount-pill ha">23 sacos</div>
+              <div class="amount-pill cuadra">16 sacos</div>
+              <div class="amount-pill solar">4 sacos</div>
+            </div>
+          </div>
+          <div class="combo-row">
+            <div class="combo-product">Nitrato de calcio</div>
+            <div class="combo-amounts">
+              <div class="amount-pill ha">2 sacos</div>
+              <div class="amount-pill cuadra">1.5 sacos</div>
+              <div class="amount-pill solar">18 kg</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="combo-block">
+          <div class="combo-title">Combinación 2 · 18-46-00 + Muriato + Nitrato de calcio</div>
+          <div class="combo-row">
+            <div class="combo-product">18–46–00 (DAP)</div>
+            <div class="combo-amounts">
+              <div class="amount-pill ha">14 sacos</div>
+              <div class="amount-pill cuadra">10 sacos</div>
+              <div class="amount-pill solar">2.5 sacos</div>
+            </div>
+          </div>
+          <div class="combo-row">
+            <div class="combo-product">Muriato de potasio</div>
+            <div class="combo-amounts">
+              <div class="amount-pill ha">6 sacos</div>
+              <div class="amount-pill cuadra">4 sacos</div>
+              <div class="amount-pill solar">1 saco</div>
+            </div>
+          </div>
+          <div class="combo-row">
+            <div class="combo-product">Nitrato de calcio</div>
+            <div class="combo-amounts">
+              <div class="amount-pill ha">2 sacos</div>
+              <div class="amount-pill cuadra">1.5 sacos</div>
+              <div class="amount-pill solar">18 kg</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="combo-block">
+          <div class="combo-title">Combinación 3 · Fertipapa Siembra + Nitrato de calcio</div>
+          <div class="combo-row">
+            <div class="combo-product">Fertipapa Siembra</div>
+            <div class="combo-amounts">
+              <div class="amount-pill ha">15 sacos</div>
+              <div class="amount-pill cuadra">11 sacos</div>
+              <div class="amount-pill solar">3 sacos</div>
+            </div>
+          </div>
+          <div class="combo-row">
+            <div class="combo-product">Nitrato de calcio</div>
+            <div class="combo-amounts">
+              <div class="amount-pill ha">1 saco</div>
+              <div class="amount-pill cuadra">35 kg</div>
+              <div class="amount-pill solar">9 kg</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLA APORQUE -->
+  <div class="fert-table">
+    <div class="fert-table-header" style="background: linear-gradient(135deg, var(--soil), var(--bark));">
+      <div style="font-size:22px;">🌿</div>
+      <div class="fert-table-title">Fertilización Complementaria (Aporque)</div>
+    </div>
+    <div class="fert-table-body">
+      <div style="font-size:12px; color:var(--bark); margin-bottom:12px;">Para aplicar <strong>antes del rascadillo</strong>, a 10 cm de la planta. Según combinación usada en siembra:</div>
+
+      <div class="combo-block" style="border-left-color: var(--soil);">
+        <div class="combo-title">Si usó Combinación 1</div>
+        <div class="combo-row"><div class="combo-product">00-00-60</div><div class="combo-amounts"><div class="amount-pill ha">4 sacos</div><div class="amount-pill cuadra">3 sacos</div><div class="amount-pill solar">35 kg</div></div></div>
+        <div class="combo-row"><div class="combo-product">Sulpomag</div><div class="combo-amounts"><div class="amount-pill ha">6 sacos</div><div class="amount-pill cuadra">4 sacos</div><div class="amount-pill solar">1 saco</div></div></div>
+        <div class="combo-row"><div class="combo-product">Urea</div><div class="combo-amounts"><div class="amount-pill ha">2 sacos</div><div class="amount-pill cuadra">1.5 sacos</div><div class="amount-pill solar">18 kg</div></div></div>
+      </div>
+
+      <div class="combo-block" style="border-left-color: var(--soil);">
+        <div class="combo-title">Si usó Combinación 2</div>
+        <div class="combo-row"><div class="combo-product">00-00-60</div><div class="combo-amounts"><div class="amount-pill ha">2 sacos</div><div class="amount-pill cuadra">1.5 sacos</div><div class="amount-pill solar">18 kg</div></div></div>
+        <div class="combo-row"><div class="combo-product">Sulpomag</div><div class="combo-amounts"><div class="amount-pill ha">5 sacos</div><div class="amount-pill cuadra">3.5 sacos</div><div class="amount-pill solar">1 saco</div></div></div>
+        <div class="combo-row"><div class="combo-product">Urea</div><div class="combo-amounts"><div class="amount-pill ha">2 sacos</div><div class="amount-pill cuadra">1.5 sacos</div><div class="amount-pill solar">18 kg</div></div></div>
+      </div>
+
+      <div class="combo-block" style="border-left-color: var(--soil);">
+        <div class="combo-title">Si usó Combinación 3</div>
+        <div class="combo-row"><div class="combo-product">Fertipapa Aporque</div><div class="combo-amounts"><div class="amount-pill ha">12 sacos</div><div class="amount-pill cuadra">8.5 sacos</div><div class="amount-pill solar">2 sacos</div></div></div>
+        <div class="combo-row"><div class="combo-product">00-00-60</div><div class="combo-amounts"><div class="amount-pill ha">3 sacos</div><div class="amount-pill cuadra">2 sacos</div><div class="amount-pill solar">25 kg</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLA COMPOSICIÓN FERTILIZANTES -->
+  <div class="card">
+    <div class="card-header" onclick="toggleCard(this.parentElement)">
+      <div class="card-icon" style="background:#fff3e0;">📊</div>
+      <div>
+        <div class="card-title">Composición de fertilizantes</div>
+        <div class="card-subtitle">% N-P-K de los productos más usados</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="card-body">
+      <div class="seeds-table-wrap">
+        <table class="seeds-table">
+          <tr><th>Fertilizante</th><th>N%</th><th>P%</th><th>K%</th><th>S%</th></tr>
+          <tr><td>Urea</td><td>46</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td>Sulfato amonio</td><td>21</td><td>—</td><td>—</td><td>24</td></tr>
+          <tr><td>10-30-10 (MAP)</td><td>10</td><td>30</td><td>10</td><td>—</td></tr>
+          <tr><td>18-46-00 (DAP)</td><td>18</td><td>46</td><td>—</td><td>—</td></tr>
+          <tr><td>Triple 15</td><td>15</td><td>15</td><td>15</td><td>—</td></tr>
+          <tr><td>Fertipapa Siembra</td><td>13</td><td>32</td><td>11</td><td>4</td></tr>
+          <tr><td>Fertipapa Aporque</td><td>15</td><td>17</td><td>19</td><td>4</td></tr>
+          <tr><td>Muriato de K</td><td>—</td><td>—</td><td>60</td><td>—</td></tr>
+          <tr><td>Sulfato de K</td><td>—</td><td>—</td><td>50</td><td>18</td></tr>
+          <tr><td>Sulpomag</td><td>—</td><td>—</td><td>22</td><td>22</td></tr>
+          <tr><td>Superfosfato simple</td><td>—</td><td>20</td><td>—</td><td>12</td></tr>
+        </table>
+      </div>
+      <p style="margin-top:8px; font-size:11px; color:var(--bark);">*kg de nutriente por cada 100 kg de fertilizante</p>
+    </div>
+  </div>
+
+  <!-- FUNGICIDAS -->
+  <div class="card">
+    <div class="card-header" onclick="toggleCard(this.parentElement)">
+      <div class="card-icon" style="background:#e8f5e9;">🍄</div>
+      <div>
+        <div class="card-title">Fungicidas para lancha (Cuadro 6)</div>
+        <div class="card-subtitle">Protectantes y sistémicos recomendados</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="card-body">
+      <div class="fung-section">
+        <div class="fung-section-title">Protectantes (preventivos)</div>
+        <div class="fung-row"><span class="fung-name">Metiram</span><span class="fung-dose">500 g/200 l</span></div>
+        <div class="fung-row"><span class="fung-name">Clorotalonil</span><span class="fung-dose">250 g/200 l</span></div>
+        <div class="fung-row"><span class="fung-name">Mancozeb</span><span class="fung-dose">500 g/200 l</span></div>
+        <div class="fung-row"><span class="fung-name">Propineb</span><span class="fung-dose">500 g/200 l</span></div>
+        <div class="fung-row"><span class="fung-name">Oxicloruro de cobre</span><span class="fung-dose">1.2 kg/200 l</span></div>
+        <div class="fung-row"><span class="fung-name">Fosfito de potasio</span><span class="fung-dose">3 l/ha</span></div>
+      </div>
+      <div class="fung-section">
+        <div class="fung-section-title">Sistémicos (curativos)</div>
+        <div class="fung-row"><span class="fung-name">Fosetil Al (35%) + Mancozeb (35%)</span><span class="fung-dose">400 g/200 l</span></div>
+        <div class="fung-row"><span class="fung-name">Cymoxanil (8%) + Mancozeb (64%)</span><span class="fung-dose">400 g/200 l</span></div>
+        <div class="fung-row"><span class="fung-name">Cymoxanil (8%) + Propineb (70%)</span><span class="fung-dose">500 g/200 l</span></div>
+        <div class="fung-row"><span class="fung-name">Metalaxil (7.5%) + Mancozeb (56%)</span><span class="fung-dose">600 g/200 l</span></div>
+        <div class="fung-row"><span class="fung-name">Dimethomorf (9%) + Mancozeb (60%)</span><span class="fung-dose">600 g/200 l</span></div>
+      </div>
+      <div class="tip-box" style="margin:0; margin-top:8px;">
+        <strong>⚠️ Alterne</strong> fungicidas para evitar resistencia. Aplique sistémicos cada 10–15 días y protectantes cada 6–8 días. En lluvia abundante, combínelos.
+      </div>
+    </div>
+  </div>
+
+  <!-- SAD -->
+  <div class="sad-box">
+    <div class="sad-title">🎯 Sistema SAD – Control de Lancha</div>
+    <div class="sad-desc">El CIP desarrolló ruedas de colores para decidir cuándo y qué fungicida aplicar según variedad y clima. App disponible: <strong>INIAP PapaSAD</strong> en Google Play.</div>
+    <div class="sad-wheel-row">
+      <div class="sad-wheel sad-green">
+        <div class="sad-label">🟢 Rueda Verde</div>
+        <div>Monitoreo cada <strong>15 días</strong></div>
+        <div class="sad-var-list" style="margin-top:4px;">Libertad, Fripapa</div>
+      </div>
+    </div>
+    <div class="sad-wheel-row">
+      <div class="sad-wheel sad-yellow">
+        <div class="sad-label">🟡 Rueda Amarilla</div>
+        <div>Monitoreo cada <strong>12 días</strong></div>
+        <div class="sad-var-list" style="margin-top:4px;">Natividad, Josefina, Superchola</div>
+      </div>
+    </div>
+    <div class="sad-wheel-row">
+      <div class="sad-wheel sad-red">
+        <div class="sad-label">🔴 Rueda Roja</div>
+        <div>Monitoreo cada <strong>8 días</strong></div>
+        <div class="sad-var-list" style="margin-top:4px;">Gabriela, Cecilia, Capiro</div>
+      </div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+</div>
+
+<!-- ===================================== -->
+<!-- PAGE: VARIEDADES -->
+<!-- ===================================== -->
+<div class="page" id="page-variedades">
+  <div class="section-header">
+    <div class="section-title">Variedades de Papa</div>
+    <div class="section-desc">Toque una variedad para ver sus características técnicas.</div>
+  </div>
+  <div class="search-wrap">
+    <input class="search-input" type="text" placeholder="🔍 Buscar variedad..." id="variety-search" oninput="filterVarieties()">
+  </div>
+  <div style="height:12px;"></div>
+  <div class="variety-grid" id="variety-grid">
+    <!-- JS generated -->
+  </div>
+  <div class="spacer"></div>
+</div>
+
+<!-- ===================================== -->
+<!-- PAGE: PLAGAS -->
+<!-- ===================================== -->
+<div class="page" id="page-plagas">
+  <div class="section-header">
+    <div class="section-title">Plagas del Cultivo</div>
+    <div class="section-desc">Identificación y manejo integrado de las principales plagas.</div>
+  </div>
+
+  <div class="pest-card" onclick="togglePest(this)">
+    <div class="pest-header">
+      <div class="pest-icon">🦋</div>
+      <div>
+        <div class="pest-name">Polilla guatemalteca / andina / común</div>
+        <div class="pest-scientific">Tecia solanivora / Symmetrischema tangolias / Phthorimaea operculella</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="pest-body">
+      <div class="pest-section">
+        <div class="pest-section-title">Daño</div>
+        <p>Las larvas hacen galerías en los tubérculos. T. solanivora daña solo tubérculos; S. tangolias también los tallos; P. operculella hace galerías en hojas.</p>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Identificación</div>
+        <ul>
+          <li>Larvas rojizo-púrpura (T. solanivora) o rosado pálido</li>
+          <li>Adultos nocturnos, se esconden bajo el follaje</li>
+          <li>Huevos en base de tallos o grietas del suelo</li>
+        </ul>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Control</div>
+        <div class="alert-tag tag-cultural">Cultural</div>
+        <ul>
+          <li>Siembras profundas + aporque alto y apretado</li>
+          <li>Destruya papa apolillada (sumerja o entierre)</li>
+          <li>Envase en sacos ralos + bases de madera</li>
+          <li>Plantas repelentes: ruda, marco, eucalipto</li>
+          <li>Trampas con feromonas específicas</li>
+        </ul>
+        <div class="alert-tag tag-bio">Biológico</div>
+        <ul>
+          <li>Baculovirus, Beauveria bassiana, Metarhizium spp.</li>
+          <li>Nematodos Steinernema, Heterorhabditis</li>
+          <li>Parasitoides: Copidosoma koehleri, Apanteles sp.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pest-card" onclick="togglePest(this)">
+    <div class="pest-header">
+      <div class="pest-icon">🪲</div>
+      <div>
+        <div class="pest-name">Gusano blanco</div>
+        <div class="pest-scientific">Premnotrypes vorax</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="pest-body">
+      <div class="pest-section">
+        <div class="pest-section-title">Daño</div>
+        <p>Larvas hacen galerías en tubérculos. Adultos comen hojas bajas dejando corte en media luna. Activos desde preparación del suelo hasta 45 días después de emergencia y 30–90 días después de cosecha.</p>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Identificación</div>
+        <ul>
+          <li>Adulto: 7mm, gris, cara en pico, no vuela</li>
+          <li>Larva: 11–14mm, blanca, cabeza café</li>
+          <li>Ciclo total: huevo→larva→prepupa→pupa→adulto</li>
+        </ul>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Control</div>
+        <div class="alert-tag tag-cultural">Cultural</div>
+        <ul>
+          <li>Trampas 2 meses antes y 1 mes después de siembra</li>
+          <li>Plantas cebo fumigadas con acefato (2 g/l), 30 días antes</li>
+          <li>Rotación de cultivos 2–3 años</li>
+          <li>Aporque cruzado y recolección total</li>
+        </ul>
+        <div class="alert-tag tag-quim">Químico</div>
+        <ul>
+          <li>Al 80% de emergencia: fipronil (2 cc/l)</li>
+          <li>A los 40, 60, 90 días: lambdacialotrina+tiametoxam (1.25 cc/l) o triflumuron (1.5 cc/l)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pest-card" onclick="togglePest(this)">
+    <div class="pest-header">
+      <div class="pest-icon">🦟</div>
+      <div>
+        <div class="pest-name">Pulgones / Áfidos</div>
+        <div class="pest-scientific">Myzus persicae, Macrosiphum euphorbiae</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="pest-body">
+      <div class="pest-section">
+        <div class="pest-section-title">Daño</div>
+        <p>Vectores de virus. Enrollamiento de hojas pequeñas en alta población. Transmiten enfermedades virales al alimentarse. Colonias sin alas + hembras aladas que dispersan.</p>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Control</div>
+        <div class="alert-tag tag-bio">Biológico</div>
+        <ul><li>Coccinélidos (mariquitas), Aphidius, Aphelinus</li></ul>
+        <div class="alert-tag tag-quim">Químico</div>
+        <ul>
+          <li>Imidacloprid: 0.5 cc/l de agua</li>
+          <li>Acetamiprid: 1.25 g/l de agua</li>
+          <li>Trampas amarillas + riegos por aspersión</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pest-card" onclick="togglePest(this)">
+    <div class="pest-header">
+      <div class="pest-icon">🦗</div>
+      <div>
+        <div class="pest-name">Psílido / Paratrioza</div>
+        <div class="pest-scientific">Bactericera cockerelli</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="pest-body">
+      <div class="pest-section">
+        <div class="pest-section-title">Daño / Importancia</div>
+        <p>Vector de "punta morada de la papa" (PMP) y "chip cebra". Daño directo: succión de savia, amarillamiento. Reportado en Carchi, Imbabura, Pichincha, Cotopaxi, Tungurahua, Chimborazo, Bolívar.</p>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Control</div>
+        <div class="alert-tag tag-cultural">Cultural</div>
+        <ul>
+          <li>Monitoreo constante 2x/semana con trampas amarillas</li>
+          <li>Surcos de 1.40 m para facilitar aplicación</li>
+          <li>Eliminar plantas enfermas semanalmente</li>
+          <li>Cortar follaje 15 días antes de cosecha</li>
+        </ul>
+        <div class="alert-tag tag-bio">Biológico</div>
+        <ul><li>Isaria fumosorosea, Metarhizium, Tamarixia triozae</li></ul>
+        <div class="alert-tag tag-quim">Químico</div>
+        <ul><li>Aplicar al detectar primeros huevos/ninfas. Rotar grupos químicos.</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pest-card" onclick="togglePest(this)">
+    <div class="pest-header">
+      <div class="pest-icon">🪰</div>
+      <div>
+        <div class="pest-name">Pulguilla</div>
+        <div class="pest-scientific">Epitrix spp.</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="pest-body">
+      <div class="pest-section">
+        <div class="pest-section-title">Daño</div>
+        <p>Adulto (escarabajo 1mm negro) perfora hojas con agujeros redondos. Larva se alimenta superficialmente de tubérculos.</p>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Control</div>
+        <ul>
+          <li>Trampas para gusano blanco también controlan pulguilla</li>
+          <li>Aporque cruzado protege el tubérculo</li>
+          <li>Si población alta: lambdacialotrina (1 cc/l) o cipermetrina (2 cc/l) al follaje basal</li>
+          <li>Biológico: Heterorhabditis (nematodo)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pest-card" onclick="togglePest(this)">
+    <div class="pest-header">
+      <div class="pest-icon">🐛</div>
+      <div>
+        <div class="pest-name">Trips</div>
+        <div class="pest-scientific">Frankliniella tuberosi</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="pest-body">
+      <div class="pest-section">
+        <div class="pest-section-title">Daño</div>
+        <p>Ninfa amarilla come epidermis de hojas: decoloración plateada, apariencia de quemado. Severo en sequía. Puede terminar el cultivo en pocos días.</p>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Control</div>
+        <div class="alert-tag tag-quim">Químico</div>
+        <ul>
+          <li>Con ≥5 ninfas/hoja: fipronil (1.5 cc/l) o acetamiprid (0.3 g/l)</li>
+          <li>Dirigir al envés del follaje basal</li>
+        </ul>
+        <div class="alert-tag tag-bio">Biológico</div>
+        <ul><li>Orius sp., Amblyseius, Neoseiulus (chinches y ácaros benéficos)</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pest-card" onclick="togglePest(this)">
+    <div class="pest-header">
+      <div class="pest-icon">🐌</div>
+      <div>
+        <div class="pest-name">Nematodo del quiste</div>
+        <div class="pest-scientific">Globodera pallida</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="pest-body">
+      <div class="pest-section">
+        <div class="pest-section-title">Daño</div>
+        <p>Reduce rendimiento hasta 30%. Plantas pequeñas en parches, marchitas en días soleados. Quistes sobreviven >30 años en el suelo. Monocultivo lo incrementa.</p>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Control — ¡NO requiere químicos!</div>
+        <div class="alert-tag tag-cultural">Cultural</div>
+        <ul>
+          <li>Rotación mínima 2–3 años: maíz, cebada, haba, trigo, pastos, alfalfa, chocho, quinua</li>
+          <li>Preparación adecuada del suelo</li>
+          <li>Eliminar plantas de papa voluntarias</li>
+          <li>Biológico: Paecilomyces, Arthrobotrys antes de siembra</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pest-card" onclick="togglePest(this)">
+    <div class="pest-header">
+      <div class="pest-icon">🪲</div>
+      <div>
+        <div class="pest-name">Mosca minadora</div>
+        <div class="pest-scientific">Liriomyza huidobrensis</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="pest-body">
+      <div class="pest-section">
+        <div class="pest-section-title">Daño</div>
+        <p>Larva hace galerías en hojas entre haz y envés (forma serpentina). Puede cubrir toda la hoja y causar defoliación.</p>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Control</div>
+        <ul>
+          <li>Trampa amarilla fija: lámina plástica amarilla con pegamento, cambie cada 15 días</li>
+          <li>Trampa amarilla móvil 4×1 m: pase entre 10h00–16h00</li>
+          <li>Biológico: Diclyphus, Dacnus (parasitoides)</li>
+          <li>Al inicio del cultivo: cartap (1.5 g/l) para adultos</li>
+          <li>Post-floración: abamectina (2.5 cc/l) para larvas</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pest-card" onclick="togglePest(this)">
+    <div class="pest-header">
+      <div class="pest-icon">🦗</div>
+      <div>
+        <div class="pest-name">Gusano tungurahua / yata</div>
+        <div class="pest-scientific">Copitarsia sp.</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="pest-body">
+      <div class="pest-section">
+        <div class="pest-section-title">Daño</div>
+        <p>Larva voraz: defolía plantas en pocos días. Se presenta en períodos de sequía. Adulto: mariposa nocturna café.</p>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Control</div>
+        <ul>
+          <li>Muestreos periódicos para detección temprana</li>
+          <li>Profenofos (2 cc/l) o Bacillus thuringiensis (2 g/l)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+</div>
+
+<!-- ===================================== -->
+<!-- PAGE: ENFERMEDADES -->
+<!-- ===================================== -->
+<div class="page" id="page-enfermedades">
+  <div class="section-header">
+    <div class="section-title">Enfermedades</div>
+    <div class="section-desc">Identificación, causas y manejo de las principales enfermedades.</div>
+  </div>
+
+  <div class="pest-card" onclick="togglePest(this)">
+    <div class="pest-header">
+      <div class="pest-icon">🍃</div>
+      <div>
+        <div class="pest-name">Lancha / Tizón tardío</div>
+        <div class="pest-scientific">Phytophthora infestans</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="pest-body">
+      <div class="pest-section">
+        <div class="pest-section-title">Identificación</div>
+        <ul>
+          <li>Manchas irregulares verde oscuro con bordes pálidos → café</li>
+          <li>Pelusas blanquecinas en el envés de hojas (con humedad)</li>
+          <li>Manchas marrón oscuro en tallos y pecíolos</li>
+          <li>Lesiones quebradizas que cubren toda la hoja</li>
+        </ul>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Condiciones que la favorecen</div>
+        <ul>
+          <li>Días lluviosos o con neblina</li>
+          <li>Alta humedad, temperatura 12–21 °C</li>
+          <li>Siembras estrechas y continuas, encharcamientos</li>
+        </ul>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Manejo</div>
+        <ul>
+          <li>Use variedades resistentes (Libertad, Fripapa, Natividad)</li>
+          <li>Aspersiones preventivas antes de síntomas</li>
+          <li>Al ver manchas: fungicidas sistémicos (cada 10–15 días)</li>
+          <li>Protectantes preventivos cada 6–8 días</li>
+          <li>En lluvia: combinar sistémicos + protectantes</li>
+          <li>Alterne fungicidas para evitar resistencia</li>
+          <li>Use app <strong>INIAP PapaSAD</strong> en Google Play</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pest-card" onclick="togglePest(this)">
+    <div class="pest-header">
+      <div class="pest-icon">🍂</div>
+      <div>
+        <div class="pest-name">Lancha temprana / Alternaria</div>
+        <div class="pest-scientific">Alternaria solani</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="pest-body">
+      <div class="pest-section">
+        <div class="pest-section-title">Identificación</div>
+        <ul>
+          <li>Manchas pardo oscuro con anillos concéntricos</li>
+          <li>Halo clorótico alrededor de las manchas</li>
+          <li>La parte afectada se desprende dejando agujeros</li>
+          <li>En plantas maduras</li>
+        </ul>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Control</div>
+        <ul>
+          <li>Clorotalonil (2.5–3 cc/l) preventivo</li>
+          <li>Azoxystrobin (1.25 cc/l) curativo</li>
+          <li>Pendiente moderada en surcos, eliminar rastrojos</li>
+          <li>Buena fertilización nitrogenada</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pest-card" onclick="togglePest(this)">
+    <div class="pest-header">
+      <div class="pest-icon">🟣</div>
+      <div>
+        <div class="pest-name">Punta morada de la papa (PMP)</div>
+        <div class="pest-scientific">Candidatus Phytoplasma / Liberibacter solanacearum</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="pest-body">
+      <div class="pest-section">
+        <div class="pest-section-title">Identificación</div>
+        <ul>
+          <li>Coloración amarilla o morada en parte joven</li>
+          <li>Ramificaciones tipo escoba de bruja</li>
+          <li>Abultamientos en nudos</li>
+          <li>Tubérculos aéreos (papitas en el tallo)</li>
+          <li>Al cortar tubérculo: pardeamiento o manchas rayadas</li>
+          <li>Pérdidas 50–100%</li>
+        </ul>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Manejo</div>
+        <ul>
+          <li>No hay control químico directo — controle los vectores (psílido)</li>
+          <li>Semilla de calidad sin síntomas de PMP</li>
+          <li>Trampas amarillas en bordes y centro del lote, cambie cada 15 días</li>
+          <li>Monitoreo 2x/semana; elimine plantas enfermas semanalmente</li>
+          <li>Variedades precoces (Libertad) reducen exposición</li>
+          <li>Elimine malezas hospederas (hierba mora, chamico, uvilla silvestre)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pest-card" onclick="togglePest(this)">
+    <div class="pest-header">
+      <div class="pest-icon">🟠</div>
+      <div>
+        <div class="pest-name">Roya</div>
+        <div class="pest-scientific">Puccinia pittieriana</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="pest-body">
+      <div class="pest-section">
+        <div class="pest-section-title">Identificación</div>
+        <ul>
+          <li>Pústulas redondas/ovaladas en envés: blanco-verde → anaranjadas → café</li>
+          <li>Hojas color amarillo con aspecto de polvo de ladrillo</li>
+          <li>A mayor altitud, mayor daño</li>
+        </ul>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Control</div>
+        <ul>
+          <li>Al inicio de floración: propiconazole (2.5 cc/l)</li>
+          <li>O epoxiconazol+pyraclostrobin (3 cc/l)</li>
+          <li>Segunda aplicación a los 15–20 días</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pest-card" onclick="togglePest(this)">
+    <div class="pest-header">
+      <div class="pest-icon">⚫</div>
+      <div>
+        <div class="pest-name">Rhizoctonia / Costra negra</div>
+        <div class="pest-scientific">Rhizoctonia solani</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="pest-body">
+      <div class="pest-section">
+        <div class="pest-section-title">Identificación</div>
+        <ul>
+          <li>Hojas superiores marchitas o enrolladas</li>
+          <li>Estrangulamiento en base de tallos</li>
+          <li>Mancha algodonosa en cuello de la planta</li>
+          <li>Tubérculos con costras negras</li>
+          <li>Tubérculos aéreos (papa de árbol)</li>
+        </ul>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Control</div>
+        <ul>
+          <li>Semilla de calidad + desinfección con fungicida</li>
+          <li>Suelos bien drenados, herramientas limpias</li>
+          <li>Elimine matas afectadas y recoger toda la papa</li>
+          <li>Evite monocultivo</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pest-card" onclick="togglePest(this)">
+    <div class="pest-header">
+      <div class="pest-icon">🔵</div>
+      <div>
+        <div class="pest-name">Sarna polvorienta / Roña</div>
+        <div class="pest-scientific">Spongospora subterranea</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="pest-body">
+      <div class="pest-section">
+        <div class="pest-section-title">Identificación</div>
+        <ul>
+          <li>Agallas en raíces tipo rosario (>15 mm)</li>
+          <li>Tubérculos con lesiones café-púrpura y deformaciones</li>
+          <li>Pústula con masa polvorienta café</li>
+          <li>Problema serio en suelos negro-andinos con alta materia orgánica</li>
+        </ul>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Control</div>
+        <ul>
+          <li>Suelos bien drenados, rotación de cultivos</li>
+          <li>Preparación del suelo 3+ meses antes</li>
+          <li>Desinfección de herramientas y maquinaria</li>
+          <li>Semilla de alta calidad sanitaria</li>
+          <li>Eliminar malezas hospederas (pacta, nabo, quinua silvestre)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pest-card" onclick="togglePest(this)">
+    <div class="pest-header">
+      <div class="pest-icon">🦠</div>
+      <div>
+        <div class="pest-name">Pie negro</div>
+        <div class="pest-scientific">Pectobacterium spp. / Dickeya spp.</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="pest-body">
+      <div class="pest-section">
+        <div class="pest-section-title">Identificación</div>
+        <ul>
+          <li>Base del tallo negra</li>
+          <li>Plantas débiles y amarillentas</li>
+          <li>Papas podridas con olor fétido</li>
+        </ul>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Control</div>
+        <ul>
+          <li>Semilla de alta calidad sanitaria</li>
+          <li>Herramientas limpias</li>
+          <li>Surcos con pendiente para evitar encharcamiento</li>
+          <li>No almacenar semilla contaminada</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="pest-card" onclick="togglePest(this)">
+    <div class="pest-header">
+      <div class="pest-icon">🟡</div>
+      <div>
+        <div class="pest-name">Virus (PLRV, PVY, PVX, PYVV)</div>
+        <div class="pest-scientific">Virosis varias</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="pest-body">
+      <div class="pest-section">
+        <div class="pest-section-title">Tipos principales</div>
+        <ul>
+          <li>PLRV: enrollamiento de hojas</li>
+          <li>PVY: mosaico rugoso</li>
+          <li>PVX: mosaico latente</li>
+          <li>PYVV: amarillamiento de venas</li>
+        </ul>
+      </div>
+      <div class="pest-section">
+        <div class="pest-section-title">Control (NO hay control químico)</div>
+        <ul>
+          <li>Semilla de alta calidad sanitaria</li>
+          <li>Selección positiva de semillas</li>
+          <li>Eliminar plantas con síntomas inmediatamente</li>
+          <li>Controlar vectores (pulgones, mosca blanca)</li>
+          <li>Limpiar herramientas para evitar contagio</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+</div>
+
+<!-- ===================================== -->
+<!-- PAGE: RIEGO -->
+<!-- ===================================== -->
+<div class="page" id="page-riego">
+  <div class="section-header">
+    <div class="section-title">Riego en Papa</div>
+    <div class="section-desc">Requerimientos hídricos y métodos recomendados para la Sierra ecuatoriana.</div>
+  </div>
+
+  <div style="padding: 0 16px;">
+    <div class="riego-stat">
+      <div class="riego-stat-icon">💧</div>
+      <div>
+        <div class="riego-stat-val">450–900 mm</div>
+        <div class="riego-stat-desc">Requerimiento total del cultivo (siembra a cosecha)</div>
+      </div>
+    </div>
+    <div class="riego-stat">
+      <div class="riego-stat-icon">⚠️</div>
+      <div>
+        <div class="riego-stat-val">Días 72–125</div>
+        <div class="riego-stat-desc">Período MÁS sensible al déficit hídrico (tuberización y engrose)</div>
+      </div>
+    </div>
+    <div class="riego-stat">
+      <div class="riego-stat-icon">🌱</div>
+      <div>
+        <div class="riego-stat-val">Días 30–45</div>
+        <div class="riego-stat-desc">Agua imprescindible para buena emergencia (suelo franco-arenoso)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-header" style="padding-bottom:4px;">
+    <div class="section-title" style="font-size:18px;">Rendimiento por método de riego</div>
+    <div class="section-desc">Estudio en Chimborazo (ESPOCH-CER):</div>
+  </div>
+  <div style="padding: 0 16px;">
+    <div style="background:white; border-radius:var(--radius); box-shadow:0 2px 12px var(--shadow); overflow:hidden;">
+      <div style="padding:14px 16px; background: linear-gradient(135deg, var(--sky), #2171a0);">
+        <div style="font-size:13px; font-weight:600; color:white;">Comparativa de métodos (Chimborazo)</div>
+      </div>
+      <div class="seeds-table-wrap" style="padding:4px;">
+        <table class="seeds-table">
+          <tr><th>Método</th><th>Rdto (t/ha)</th><th>Agua (l/m²)</th><th>L/kg papa</th></tr>
+          <tr><td>Gravedad (surcos)</td><td>23.9</td><td>901</td><td>377</td></tr>
+          <tr><td>Aspersión</td><td>26.6</td><td>515</td><td>194</td></tr>
+          <tr><td>Goteo (mejor)</td><td><strong>29.1</strong></td><td><strong>401</strong></td><td><strong>138</strong></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip-box" style="margin-top:10px;">
+    <strong>💧 Goteo = mayor eficiencia:</strong> 29.1 t/ha con menos agua. Permite fertirrigación y reduce enfermedades.
+  </div>
+
+  <div class="section-header" style="padding-bottom:4px;">
+    <div class="section-title" style="font-size:18px;">Sin riego vs con riego</div>
+  </div>
+  <div style="padding: 0 16px; margin-bottom:12px;">
+    <div style="background:white; border-radius:var(--radius); padding:14px 16px; box-shadow:0 2px 12px var(--shadow);">
+      <div style="display:flex; gap:10px; align-items:stretch;">
+        <div style="flex:1; background:#fde8e8; border-radius:10px; padding:12px; text-align:center;">
+          <div style="font-size:11px; text-transform:uppercase; font-weight:700; color:#8b0000; letter-spacing:0.5px; margin-bottom:6px;">Solo lluvia</div>
+          <div style="font-size:24px; font-weight:800; color:#c0392b; font-family:'Playfair Display',serif;">8–12</div>
+          <div style="font-size:11px; color:#8b0000;">t/ha</div>
+        </div>
+        <div style="display:flex; align-items:center; font-size:20px; color:var(--bark);">→</div>
+        <div style="flex:1; background:#d4f5d4; border-radius:10px; padding:12px; text-align:center;">
+          <div style="font-size:11px; text-transform:uppercase; font-weight:700; color:#1a5e1a; letter-spacing:0.5px; margin-bottom:6px;">Con riego</div>
+          <div style="font-size:24px; font-weight:800; color:#27ae60; font-family:'Playfair Display',serif;">30</div>
+          <div style="font-size:11px; color:#1a5e1a;">t/ha</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header" onclick="toggleCard(this.parentElement)">
+      <div class="card-icon" style="background:#e3f2fd;">🌊</div>
+      <div>
+        <div class="card-title">Métodos de riego disponibles</div>
+        <div class="card-subtitle">Gravitacionales y presurizados</div>
+      </div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="card-body">
+      <p><strong>Gravitacionales:</strong> Surcos/huachos, platabandas. Mayor uso de agua.</p>
+      <p><strong>Presurizados:</strong></p>
+      <ul style="list-style:none; padding-left:0;">
+        <li style="padding:4px 0;">💦 <strong>Aspersión:</strong> Eficiencia media. 515 l/m² en estudios. Riesgo de diseminar enfermedades.</li>
+        <li style="padding:4px 0;">💧 <strong>Microaspersión:</strong> Similar a aspersión pero con menor presión.</li>
+        <li style="padding:4px 0;">🟢 <strong>Goteo:</strong> Más eficiente. 400 l/m². Permite fertirrigación, reduce enfermedades.</li>
+      </ul>
+      <p>Recuerde considerar: zona de producción, tipo de suelo, variedad, densidad, estado fenológico y precipitación.</p>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+</div>
+
+<!-- ===================================== -->
+<!-- JAVASCRIPT -->
+<!-- ===================================== -->
+<script>
+// ===== NAVIGATION =====
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.target.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ===== TOGGLE CARD =====
+function toggleCard(card) {
+  card.classList.toggle('expanded');
+}
+
+// ===== TOGGLE PHASE =====
+function togglePhase(block) {
+  block.classList.toggle('open');
+}
+
+// ===== TOGGLE PEST =====
+function togglePest(card) {
+  card.classList.toggle('open');
+}
+
+// ===== VARIETY DATA =====
+const varieties = [
+  // NATIVAS
+  { name: 'Yema de huevo', type: 'Nativa (S. phureja)', lancha: 'muy-susceptible', precocity: 'precoz', yield: '10 t/ha', maturity: 'Precoz', reposo: 'Sin reposo', ms: '22%', usos: 'Consumo en fresco: papa cocinada. Se cocina rápidamente, puede congelarse.' },
+  { name: 'Bolona', type: 'Nativa (S. andigena)', lancha: 'muy-susceptible', precocity: 'tardia', yield: '20 t/ha', maturity: 'Tardía', reposo: '65 días', ms: '21%', usos: 'Consumo en fresco: puré, locro, sopas.' },
+  { name: 'Chaucha roja', type: 'Nativa (S. phureja)', lancha: 'muy-susceptible', precocity: 'precoz', yield: '12 t/ha', maturity: 'Precoz', reposo: 'Sin reposo', ms: '21%', usos: 'Consumo en fresco: puré, locro, sopas.' },
+  { name: 'Uvilla', type: 'Nativa (S. andigena)', lancha: 'muy-susceptible', precocity: 'tardia', yield: '25 t/ha', maturity: 'Tardía', reposo: '70 días', ms: '23%', usos: 'Consumo en fresco: locro, sopas.' },
+  // MEJORADAS
+  { name: 'INIAP-CIP Libertad', type: 'Mejorada (2015)', lancha: 'muy-resistente', precocity: 'precoz', yield: '25–48 t/ha', maturity: 'Precoz', reposo: '90 días', ms: '22%', usos: 'Papa frita chips/francesa. Consumo fresco: cocida con cáscara. Muy resistente a lancha.' },
+  { name: 'INIAP-Fripapa', type: 'Mejorada (1999)', lancha: 'resistente', precocity: 'intermedia', yield: '47 t/ha', maturity: 'Intermedia', reposo: '60 días', ms: '27%', usos: 'Papa frita hojuelas y bastones. Consumo fresco: cocida. Alto rendimiento.' },
+  { name: 'INIAP-Victoria', type: 'Mejorada (2011)', lancha: 'resistente', precocity: 'intermedia', yield: '40 t/ha', maturity: 'Intermedia', reposo: '30 días', ms: '21%', usos: 'Consumo fresco: cocida, sopas, puré, tortillas. Papa frita hojuelas y bastones.' },
+  { name: 'INIAP-Natividad', type: 'Mejorada (2007)', lancha: 'muy-resistente', precocity: 'intermedia', yield: '40 t/ha', maturity: 'Intermedia', reposo: '25 días', ms: '20%', usos: 'Consumo fresco: cocida, locro, sopas, puré, tortillas. Mantiene textura arenosa.' },
+  { name: 'INIAP-Josefina', type: 'Mejorada (2015)', lancha: 'resistente', precocity: 'intermedia', yield: '18–36 t/ha', maturity: 'Intermedia', reposo: '60 días', ms: '23%', usos: 'Consumo fresco: cocida, locro, sopas, puré, tortillas. Tolerante a estrés por sequía.' },
+  { name: 'INIAP-Fátima', type: 'Mejorada (2019)', lancha: 'resistente', precocity: 'intermedia', yield: '32 t/ha', maturity: 'Intermedia', reposo: '50–60 días', ms: '23%', usos: 'Consumo fresco: locro, sopa, tortilla, cocidas. Papa frita bastón.' },
+  { name: 'INIAP-Puca Shungo', type: 'Mejorada (2011) – pulpa roja', lancha: 'resistente', precocity: 'intermedia', yield: '27 t/ha', maturity: 'Intermedia', reposo: '30 días', ms: '21%', usos: 'Consumo fresco: cocida con cáscara, puré, al vapor, asadas. Papa frita hojuelas de color.' },
+  { name: 'INIAP-Yana Shungo', type: 'Mejorada (2011) – pulpa morada', lancha: 'resistente', precocity: 'intermedia', yield: '17 t/ha', maturity: 'Intermedia', reposo: '15 días', ms: '20%', usos: 'Consumo fresco: cocida, al vapor, asadas, puré. Papa frita hojuelas de color.' },
+  { name: 'Superchola', type: 'Mejorada (1984)', lancha: 'susceptible', precocity: 'tardia', yield: '30 t/ha', maturity: 'Tardía', reposo: '80 días', ms: '24%', usos: 'Consumo fresco: locro, sopas, puré. Papa frita hojuelas y bastones. La más cultivada en el país.' },
+  { name: 'INIAP-Gabriela', type: 'Mejorada (1982)', lancha: 'susceptible', precocity: 'intermedia', yield: '30 t/ha', maturity: 'Intermedia', reposo: '80 días', ms: '21%', usos: 'Consumo fresco: locro, sopas, tortillas, puré. Tolerante nematodo.' },
+  { name: 'INIAP-Cecilia', type: 'Mejorada (2011)', lancha: 'muy-susceptible', precocity: 'intermedia', yield: '25 t/ha', maturity: 'Intermedia', reposo: '70 días', ms: '20%', usos: 'Consumo fresco: locro, sopas, tortillas. Papa frita y chips.' },
+  { name: 'INIAP-Santa Catalina', type: 'Mejorada (1968)', lancha: 'resistente', precocity: 'intermedia', yield: '28 t/ha', maturity: 'Intermedia', reposo: '90 días', ms: '22%', usos: 'Consumo fresco: locro, sopas, puré.' },
+];
+
+function getLanchaLabel(key) {
+  const map = {
+    'muy-resistente': { label: 'Muy resistente', class: 'badge-muy-resistente' },
+    'resistente': { label: 'Resistente', class: 'badge-resistente' },
+    'susceptible': { label: 'Susceptible', class: 'badge-susceptible' },
+    'muy-susceptible': { label: 'Muy susceptible', class: 'badge-muy-susceptible' },
+  };
+  return map[key] || { label: key, class: '' };
+}
+function getPrecozLabel(key) {
+  const map = {
+    'precoz': { label: 'Precoz', class: 'badge-precoz' },
+    'intermedia': { label: 'Intermedia', class: 'badge-intermedia' },
+    'tardia': { label: 'Tardía', class: 'badge-tardia' },
+  };
+  return map[key] || { label: key, class: '' };
+}
+
+function renderVarieties(list) {
+  const grid = document.getElementById('variety-grid');
+  grid.innerHTML = list.map(v => {
+    const l = getLanchaLabel(v.lancha);
+    const p = getPrecozLabel(v.precocity);
+    return `
+    <div class="variety-card" onclick="toggleVariety(this)">
+      <div class="variety-card-header">
+        <div style="flex:1;">
+          <div class="variety-name">${v.name}</div>
+          <div class="variety-type">${v.type}</div>
+          <div style="margin-top:6px; display:flex; gap:5px; flex-wrap:wrap;">
+            <span class="variety-badge ${l.class}">🦠 ${l.label} lancha</span>
+            <span class="variety-badge ${p.class}">⏱ ${p.label}</span>
+          </div>
+        </div>
+        <div class="chevron">›</div>
+      </div>
+      <div class="variety-details">
+        <div class="detail-grid">
+          <div class="detail-item"><div class="detail-label">Rendimiento</div><div class="detail-value">${v.yield}</div></div>
+          <div class="detail-item"><div class="detail-label">Madurez</div><div class="detail-value">${v.maturity}</div></div>
+          <div class="detail-item"><div class="detail-label">Reposo</div><div class="detail-value">${v.reposo}</div></div>
+          <div class="detail-item"><div class="detail-label">Mat. seca</div><div class="detail-value">${v.ms}</div></div>
+        </div>
+        <div class="variety-use">🍽️ <strong>Usos:</strong> ${v.usos}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleVariety(card) {
+  card.classList.toggle('open');
+}
+
+function filterVarieties() {
+  const q = document.getElementById('variety-search').value.toLowerCase();
+  const filtered = varieties.filter(v =>
+    v.name.toLowerCase().includes(q) ||
+    v.type.toLowerCase().includes(q) ||
+    v.usos.toLowerCase().includes(q)
+  );
+  renderVarieties(filtered);
+}
+
+renderVarieties(varieties);
+
+// ===== SEED CALCULATOR =====
+const seedData = {
+  small: { min: 16, max: 24 },
+  med: { min: 24, max: 37 },
+  big: { min: 36, max: 56 },
+};
+const unitMultipliers = { ha: 1, cuadra: 0.7056, solar: 0.1764, cantero: 0.0441 };
+const unitNames = { ha: 'hectárea', cuadra: 'cuadra (7,056 m²)', solar: 'solar (1,764 m²)', cantero: 'cantero (441 m²)' };
+const sitesPerHa = {
+  '30-1.00': 33333, '40-1.00': 25000,
+  '30-1.20': 27778, '40-1.20': 20833,
+  '30-1.30': 25641, '40-1.30': 19231,
+  '30-1.40': 23810, '40-1.40': 17857,
+};
+
+function calcSeed() {
+  const area = parseFloat(document.getElementById('seed-area').value);
+  const unit = document.getElementById('seed-unit').value;
+  const cls = document.getElementById('seed-class').value;
+  const dist = document.getElementById('seed-dist').value;
+  const row = document.getElementById('seed-row').value;
+
+  if (!area || area <= 0) { alert('Ingrese una superficie válida.'); return; }
+
+  const haEquiv = area * unitMultipliers[unit];
+  const key = dist + '-' + parseFloat(row).toFixed(2);
+  const sites = (sitesPerHa[key] || 27778) * haEquiv;
+  const { min, max } = seedData[cls];
+  const minQq = (min * haEquiv).toFixed(1);
+  const maxQq = (max * haEquiv).toFixed(1);
+  const minKg = (min * 46 * haEquiv).toFixed(0);
+  const maxKg = (max * 46 * haEquiv).toFixed(0);
+
+  document.getElementById('seed-result-body').innerHTML = `
+    <div class="result-row"><span class="result-key">Superficie</span><span class="result-val">${area} ${unitNames[unit]}</span></div>
+    <div class="result-row"><span class="result-key">Equivalente</span><span class="result-val">${haEquiv.toFixed(4)} ha</span></div>
+    <div class="result-row"><span class="result-key">Sitios de siembra</span><span class="result-val">${Math.round(sites).toLocaleString()}</span></div>
+    <div class="result-row"><span class="result-key">Semilla necesaria</span><span class="result-val">${minQq}–${maxQq} qq</span></div>
+    <div class="result-row"><span class="result-key">Equivalente en kg</span><span class="result-val">≈${minKg}–${maxKg} kg</span></div>
+  `;
+  document.getElementById('seed-result').classList.add('show');
+}
+
+// ===== FERTILIZER CALCULATOR =====
+const fertData = {
+  '1': { name: '10-30-10 + Nitrato de calcio', items: [
+    { prod: '10–30–10 (MAP)', ha: '23 sacos', cuadra: '16 sacos', solar: '4 sacos', cantero: '1 saco' },
+    { prod: 'Nitrato de calcio', ha: '2 sacos', cuadra: '1.5 sacos', solar: '18 kg', cantero: '5 kg' },
+  ]},
+  '2': { name: '18-46-00 + Muriato + Nitrato de calcio', items: [
+    { prod: '18–46–00 (DAP)', ha: '14 sacos', cuadra: '10 sacos', solar: '2.5 sacos', cantero: '30 kg' },
+    { prod: 'Muriato de potasio', ha: '6 sacos', cuadra: '4 sacos', solar: '1 saco', cantero: '13 kg' },
+    { prod: 'Nitrato de calcio', ha: '2 sacos', cuadra: '1.5 sacos', solar: '18 kg', cantero: '5 kg' },
+  ]},
+  '3': { name: 'Fertipapa Siembra + Nitrato de calcio', items: [
+    { prod: 'Fertipapa Siembra', ha: '15 sacos', cuadra: '11 sacos', solar: '3 sacos', cantero: '33 kg' },
+    { prod: 'Nitrato de calcio', ha: '1 saco', cuadra: '35 kg', solar: '9 kg', cantero: '2 kg' },
+  ]},
+};
+
+function calcFert() {
+  const area = parseFloat(document.getElementById('fert-area').value);
+  const unit = document.getElementById('fert-unit').value;
+  const combo = document.getElementById('fert-combo').value;
+
+  if (!area || area <= 0) { alert('Ingrese una superficie válida.'); return; }
+
+  const haEquiv = area * unitMultipliers[unit];
+  const data = fertData[combo];
+
+  let rows = data.items.map(item => {
+    // Scale from 1 ha base quantities
+    const baseUnits = { ha: 1, cuadra: 0.7056, solar: 0.1764, cantero: 0.0441 };
+    return `<div class="result-row"><span class="result-key">${item.prod}</span><span class="result-val">${scaleQty(item.ha, haEquiv)}</span></div>`;
+  }).join('');
+
+  document.getElementById('fert-result-body').innerHTML = `
+    <div style="font-size:13px; color:var(--leaf); font-weight:600; margin-bottom:8px;">📋 ${data.name}</div>
+    <div class="result-row"><span class="result-key">Superficie</span><span class="result-val">${area} ${unitNames[unit]} (${haEquiv.toFixed(3)} ha)</span></div>
+    ${rows}
+  `;
+  document.getElementById('fert-result').classList.add('show');
+}
+
+function scaleQty(baseStr, haEquiv) {
+  // Extract number from "23 sacos" or "18 kg"
+  const match = baseStr.match(/([\d.]+)\s*(sacos?|kg)/i);
+  if (!match) return baseStr;
+  const num = parseFloat(match[1]) * haEquiv;
+  const unit2 = match[2].toLowerCase().includes('saco') ? 'sacos' : 'kg';
+  if (unit2 === 'sacos') {
+    if (num < 1) return `${(num * 46).toFixed(1)} kg`;
+    return `${num.toFixed(1)} sacos`;
+  }
+  return `${num.toFixed(1)} kg`;
+}
+
+// ===== DATE CALCULATOR =====
+function calcDates() {
+  const dateVal = document.getElementById('sowing-date').value;
+  const precocity = document.getElementById('variety-precocity').value;
+
+  if (!dateVal) { alert('Seleccione la fecha de siembra.'); return; }
+
+  const sow = new Date(dateVal + 'T00:00:00');
+  const fmtDate = (d) => d.toLocaleDateString('es-EC', { day: 'numeric', month: 'short', year: 'numeric' });
+  const addDays = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
+
+  const events = [
+    { label: '🌱 Emergencia (16–30 dds)', days: 23 },
+    { label: '🔄 Fertilización complementaria + Rascadillo (~45 dds)', days: 45 },
+    { label: '⛏️ Medio aporque (~60 dds)', days: 60 },
+    { label: '⛏️ Aporque definitivo (60–90 dds)', days: 75 },
+    { label: '💧 Inicio período crítico de riego (72 dds)', days: 72 },
+    { label: '🌸 Inicio floración / tuberización (90–120 dds)', days: precocity === 'precoz' ? 90 : precocity === 'intermedia' ? 100 : 110 },
+    { label: '🌺 Fertilización foliar (3× cada 21 días desde floración)', days: precocity === 'precoz' ? 90 : precocity === 'intermedia' ? 100 : 110 },
+    { label: '💧 Fin período crítico de riego (125 dds)', days: 125 },
+    { label: '🥔 Engrose tubérculos (137–151 dds)', days: 144 },
+    { label: '🌾 Maduración / cosecha estimada', days: precocity === 'precoz' ? 127 : precocity === 'intermedia' ? 150 : 180 },
+  ];
+
+  const rows = events.map(e => `
+    <div class="result-row">
+      <span class="result-key" style="flex:1;">${e.label}</span>
+      <span class="result-val" style="white-space:nowrap; font-size:13px;">${fmtDate(addDays(sow, e.days))}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('dates-result-body').innerHTML = `
+    <div class="result-row"><span class="result-key">📅 Fecha de siembra</span><span class="result-val">${fmtDate(sow)}</span></div>
+    <div class="result-row"><span class="result-key">🌿 Ciclo</span><span class="result-val">${precocity === 'precoz' ? '4 meses' : precocity === 'intermedia' ? '5 meses' : '6 meses'}</span></div>
+    ${rows}
+  `;
+  document.getElementById('dates-result').classList.add('show');
+}
+</script>
+</body>
+</html>
