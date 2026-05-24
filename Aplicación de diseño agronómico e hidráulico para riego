@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgroRiego — Diseño Agronómico e Hidráulico</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2230;
+    --border: #30363d;
+    --border2: #21262d;
+    --accent: #39d353;
+    --accent2: #1f6feb;
+    --warn: #e3b341;
+    --danger: #f85149;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --text3: #484f58;
+    --radius: 10px;
+    --transition: 0.2s ease;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── TOP BAR ─── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--text2); font-size: 13px; font-family: 'Outfit', sans-serif; margin-left: 8px; font-weight: 400; }
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+  .toggle-mode {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    transition: var(--transition);
+  }
+  .toggle-mode.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 500; }
+  .toggle-mode:hover { border-color: var(--accent); }
+
+  /* ─── LAYOUT ─── */
+  .app-shell {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: calc(100vh - 57px);
+  }
+
+  /* ─── SIDEBAR ─── */
+  aside {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .nav-section { font-size: 10px; color: var(--text3); letter-spacing: 1.2px; text-transform: uppercase; font-family: 'DM Mono', monospace; padding: 12px 8px 6px; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13.5px;
+    color: var(--text2);
+    transition: var(--transition);
+    border: 1px solid transparent;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(57,211,83,0.1); color: var(--accent); border-color: rgba(57,211,83,0.2); }
+  .nav-item .icon { width: 18px; text-align: center; font-size: 15px; }
+  .step-badge {
+    margin-left: auto;
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 2px 7px;
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text3);
+  }
+  .nav-item.active .step-badge { background: rgba(57,211,83,0.15); color: var(--accent); }
+  .nav-item.completed .icon::after { content: ' ✓'; font-size: 10px; color: var(--accent); }
+
+  /* ─── MAIN ─── */
+  main {
+    padding: 28px 32px;
+    overflow-y: auto;
+    max-height: calc(100vh - 57px);
+  }
+
+  .screen { display: none; animation: fadeIn 0.25s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .screen-header { margin-bottom: 24px; }
+  .screen-header h2 { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; color: var(--text); }
+  .screen-header p { color: var(--text2); font-size: 13.5px; margin-top: 4px; }
+
+  /* ─── CARDS & GRID ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-title { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--accent); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 16px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .col-span-2 { grid-column: span 2; }
+
+  /* ─── FORM ELEMENTS ─── */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; color: var(--text2); font-weight: 500; }
+  .field label .req { color: var(--danger); margin-left: 2px; }
+  .field label .opt { color: var(--text3); font-size: 11px; margin-left: 4px; }
+
+  input[type="text"], input[type="number"], select, textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 7px;
+    padding: 9px 12px;
+    font-size: 13.5px;
+    font-family: 'Outfit', sans-serif;
+    transition: var(--transition);
+    width: 100%;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(57,211,83,0.1); }
+  input.error { border-color: var(--danger); }
+  select option { background: var(--bg); }
+  .field-unit {
+    display: flex; gap: 0;
+  }
+  .field-unit input { border-radius: 7px 0 0 7px; }
+  .field-unit select { border-radius: 0 7px 7px 0; border-left: none; width: auto; min-width: 80px; color: var(--text2); }
+  .field-hint { font-size: 11px; color: var(--text3); }
+  .field-error { font-size: 11px; color: var(--danger); display: none; }
+  .field-error.show { display: block; }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: #4ade80; }
+  .btn-secondary { background: transparent; border-color: var(--border); color: var(--text2); }
+  .btn-secondary:hover { border-color: var(--text2); color: var(--text); }
+  .btn-ghost { background: transparent; color: var(--text2); }
+  .btn-ghost:hover { color: var(--text); background: var(--surface2); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-danger { background: rgba(248,81,73,0.1); border-color: var(--danger); color: var(--danger); }
+
+  .actions-bar { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border2); }
+
+  /* ─── RESULTS ─── */
+  .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .result-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent); }
+  .result-card.blue::before { background: var(--accent2); }
+  .result-card.warn::before { background: var(--warn); }
+  .result-card .r-label { font-size: 11px; color: var(--text2); font-family: 'DM Mono', monospace; margin-bottom: 6px; }
+  .result-card .r-value { font-size: 26px; font-family: 'DM Serif Display', serif; color: var(--text); line-height: 1; }
+  .result-card .r-unit { font-size: 12px; color: var(--text2); margin-top: 3px; }
+  .result-card .r-formula { font-size: 10px; color: var(--text3); font-family: 'DM Mono', monospace; margin-top: 8px; }
+
+  .highlight-box {
+    background: rgba(57,211,83,0.05);
+    border: 1px solid rgba(57,211,83,0.2);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 14px;
+  }
+  .highlight-box h3 { font-size: 13px; color: var(--accent); font-family: 'DM Mono', monospace; margin-bottom: 10px; letter-spacing: 0.5px; }
+  .highlight-row { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px solid rgba(57,211,83,0.1); }
+  .highlight-row:last-child { border-bottom: none; }
+  .highlight-row .hl-label { font-size: 13px; color: var(--text2); }
+  .highlight-row .hl-value { font-size: 15px; font-weight: 600; color: var(--text); font-family: 'DM Mono', monospace; }
+
+  /* ─── ALERTS ─── */
+  .alerts-container { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .alert {
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .alert-warn { background: rgba(227,179,65,0.1); border: 1px solid rgba(227,179,65,0.3); color: var(--warn); }
+  .alert-danger { background: rgba(248,81,73,0.1); border: 1px solid rgba(248,81,73,0.3); color: var(--danger); }
+  .alert-info { background: rgba(31,111,235,0.1); border: 1px solid rgba(31,111,235,0.3); color: #58a6ff; }
+  .alert-ok { background: rgba(57,211,83,0.08); border: 1px solid rgba(57,211,83,0.2); color: var(--accent); }
+
+  /* ─── ASSUMPTIONS BOX ─── */
+  .assumptions {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin-top: 14px;
+  }
+  .assumptions h4 { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 10px; }
+  .assumption-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .assumption-tag {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text2);
+  }
+  .assumption-tag span { color: var(--text); }
+
+  /* ─── CATALOG TABLE ─── */
+  .catalog-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .catalog-table th { background: var(--surface2); color: var(--text2); font-size: 11px; font-family: 'DM Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  .catalog-table td { padding: 8px 12px; border-bottom: 1px solid var(--border2); color: var(--text); }
+  .catalog-table tr:hover td { background: var(--surface2); }
+  .catalog-table tr.selected td { background: rgba(57,211,83,0.07); }
+  .catalog-table tr { cursor: pointer; }
+  .num { font-family: 'DM Mono', monospace; color: var(--text2); }
+
+  /* ─── TABS ─── */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .tab { padding: 9px 18px; font-size: 13px; cursor: pointer; color: var(--text2); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: var(--transition); }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ─── PROJECTS LIST ─── */
+  .project-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .project-card:hover { border-color: var(--accent); background: var(--surface2); }
+  .project-card .p-name { font-size: 15px; font-weight: 500; }
+  .project-card .p-meta { font-size: 12px; color: var(--text2); margin-top: 3px; font-family: 'DM Mono', monospace; }
+  .project-card .p-actions { display: flex; gap: 8px; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+  .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ─── SHARE BOX ─── */
+  .share-box { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 200; }
+  .share-box.open { display: flex; }
+  .share-box-inner { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; width: 500px; max-width: 95vw; max-height: 80vh; overflow-y: auto; }
+  .share-box-inner textarea { height: 300px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text2); resize: none; }
+
+  /* ─── HISTORY ─── */
+  .history-item { background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .history-item .h-title { font-size: 13px; }
+  .history-item .h-meta { font-size: 11px; color: var(--text2); font-family: 'DM Mono', monospace; margin-top: 2px; }
+  .history-item .h-restore { font-size: 12px; color: var(--accent); cursor: pointer; }
+
+  /* ─── RADIO PILLS ─── */
+  .pill-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text2);
+    transition: var(--transition);
+    background: var(--bg);
+  }
+  .pill:hover { border-color: var(--text2); color: var(--text); }
+  .pill.selected { border-color: var(--accent); color: var(--accent); background: rgba(57,211,83,0.08); }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 768px) {
+    .app-shell { grid-template-columns: 1fr; }
+    aside { display: none; }
+    main { padding: 16px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .divider { height: 1px; background: var(--border2); margin: 20px 0; }
+  
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-family: 'DM Mono', monospace; }
+  .tag-green { background: rgba(57,211,83,0.1); color: var(--accent); }
+  .tag-blue { background: rgba(31,111,235,0.1); color: #58a6ff; }
+  .tag-warn { background: rgba(227,179,65,0.1); color: var(--warn); }
+
+  .kc-display { display: inline-flex; align-items: center; gap: 6px; }
+  .kc-display .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">AgroRiego <span>Diseño Agronómico · Hidráulico</span></div>
+  <div class="header-actions">
+    <button class="toggle-mode" id="modeToggle" onclick="toggleTechMode()">🔬 Modo técnico</button>
+    <button class="btn btn-sm btn-secondary" onclick="showShare()">📤 Compartir</button>
+  </div>
+</header>
+
+<div class="app-shell">
+  <aside>
+    <div class="nav-section">Proyecto</div>
+    <div class="nav-item active" id="nav-home" onclick="showScreen('home')">
+      <span class="icon">🏠</span> Inicio
+    </div>
+
+    <div class="nav-section">Cálculo</div>
+    <div class="nav-item" id="nav-parcela" onclick="showScreen('parcela')">
+      <span class="icon">📍</span> A. Parcela <span class="step-badge">1</span>
+    </div>
+    <div class="nav-item" id="nav-cultivo" onclick="showScreen('cultivo')">
+      <span class="icon">🌱</span> B. Cultivo <span class="step-badge">2</span>
+    </div>
+    <div class="nav-item" id="nav-clima" onclick="showScreen('clima')">
+      <span class="icon">🌤️</span> C. Clima <span class="step-badge">3</span>
+    </div>
+    <div class="nav-item" id="nav-suelo" onclick="showScreen('suelo')">
+      <span class="icon">🪨</span> D. Suelo <span class="step-badge">4</span>
+    </div>
+    <div class="nav-item" id="nav-riego" onclick="showScreen('riego')">
+      <span class="icon">💧</span> E. Riego <span class="step-badge">5</span>
+    </div>
+    <div class="nav-item" id="nav-resultados" onclick="showScreen('resultados')">
+      <span class="icon">📊</span> F. Resultados <span class="step-badge">6</span>
+    </div>
+    <div class="nav-item" id="nav-hidraulica" onclick="showScreen('hidraulica')">
+      <span class="icon">⚡</span> G. Hidráulica <span class="step-badge">7</span>
+    </div>
+
+    <div class="nav-section" style="margin-top: auto;">Datos</div>
+    <div class="nav-item" id="nav-catalogos" onclick="showScreen('catalogos')">
+      <span class="icon">📚</span> Catálogos
+    </div>
+    <div class="nav-item" id="nav-historial" onclick="showScreen('historial')">
+      <span class="icon">📋</span> Historial
+    </div>
+  </aside>
+
+  <main>
+
+    <!-- ══════════════════ INICIO ══════════════════ -->
+    <div class="screen active" id="screen-home">
+      <div class="screen-header">
+        <h2>Proyectos</h2>
+        <p>Gestiona tus fincas y campañas de riego</p>
+      </div>
+      <div style="display:flex; gap:10px; margin-bottom:20px;">
+        <button class="btn btn-primary" onclick="newProject()">+ Nuevo proyecto</button>
+        <button class="btn btn-secondary" onclick="showScreen('parcela')">⚡ Cálculo rápido</button>
+      </div>
+      <div id="projects-list"></div>
+    </div>
+
+    <!-- ══════════════════ A: PARCELA ══════════════════ -->
+    <div class="screen" id="screen-parcela">
+      <div class="screen-header">
+        <h2>A. Parcela</h2>
+        <p>Identificación y características básicas de la parcela</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Identificación</div>
+        <div class="grid-2">
+          <div class="field">
+            <label>ID / Nombre <span class="req">*</span></label>
+            <input type="text" id="parcel_id" placeholder="Ej: Parcela-01 o Lote Norte" oninput="autoSave()">
+            <div class="field-error" id="err_parcel_id">El nombre no puede estar vacío</div>
+          </div>
+          <div class="field">
+            <label>Nombre descriptivo <span class="opt">(opcional)</span></label>
+            <input type="text" id="parcel_name" placeholder="Ej: Tomate sector A" oninput="autoSave()">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Área</div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Área <span class="req">*</span></label>
+            <div class="field-unit">
+              <input type="number" id="area_value" placeholder="0" min="0" step="0.01" oninput="updateAreaCalc(); autoSave()">
+              <select id="area_unit" onchange="updateAreaCalc(); autoSave()">
+                <option value="ha">ha</option>
+                <option value="m2">m²</option>
+              </select>
+            </div>
+            <div class="field-error" id="err_area">El área debe ser mayor a 0</div>
+          </div>
+          <div class="field">
+            <label>Conversión automática</label>
+            <div style="background: var(--bg); border: 1px solid var(--border2); border-radius:7px; padding: 9px 12px; font-family: 'DM Mono', monospace; font-size:13px; color: var(--text2);" id="area_converted">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="techCard-parcela" style="display:none;">
+        <div class="card-title">Datos adicionales <span class="tag tag-blue">Modo técnico</span></div>
+        <div class="grid-3">
+          <div class="field">
+            <label>Pendiente <span class="opt">(%)</span></label>
+            <input type="number" id="slope_pct" placeholder="0–60" min="0" max="60" oninput="autoSave()">
+            <div class="field-hint">Alerta si &gt; 20%</div>
+          </div>
+          <div class="field">
+            <label>Altitud <span class="opt">(m)</span></label>
+            <input type="number" id="elevation_m" placeholder="0–5000" min="0" max="5000" oninput="autoSave()">
+          </div>
+          <div class="field">
+            <label>Observaciones</label>
+            <input type="text" id="notes_parcela" placeholder="Notas..." oninput="autoSave()">
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-bar">
+        <button class="btn btn-secondary" onclick="showScreen('home')">← Inicio</button>
+        <button class="btn btn-primary" onclick="validateAndGo('parcela','cultivo')">Continuar → Cultivo</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════ B: CULTIVO ══════════════════ -->
+    <div class="screen" id="screen-cultivo">
+      <div class="screen-header">
+        <h2>B. Cultivo y Etapa</h2>
+        <p>Coeficiente de cultivo, etapa fenológica y raíz</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Selección de cultivo</div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Cultivo <span class="req">*</span></label>
+            <select id="crop_name" onchange="loadCropDefaults(); autoSave()">
+              <option value="">— Selecciona cultivo —</option>
+              <option value="Papa">Papa</option>
+              <option value="Maíz (grano)">Maíz (grano)</option>
+              <option value="Lechuga">Lechuga</option>
+              <option value="Tomate (campo)">Tomate (campo)</option>
+              <option value="Cebolla">Cebolla</option>
+              <option value="Zanahoria">Zanahoria</option>
+              <option value="Brócoli">Brócoli</option>
+              <option value="Fréjol (arbustivo)">Fréjol (arbustivo)</option>
+              <option value="Alfalfa (corte)">Alfalfa (corte)</option>
+              <option value="Pasto (raigrás/mezcla)">Pasto (raigrás/mezcla)</option>
+              <option value="Fresa">Fresa</option>
+              <option value="Personalizado">Personalizado</option>
+            </select>
+            <div class="field-error" id="err_crop">Selecciona un cultivo</div>
+          </div>
+          <div class="field">
+            <label>Etapa fenológica <span class="req">*</span></label>
+            <div class="pill-group" id="stage-pills">
+              <div class="pill selected" data-stage="med" onclick="selectStage('med')">Medio</div>
+              <div class="pill" data-stage="ini" onclick="selectStage('ini')">Inicial</div>
+              <div class="pill" data-stage="des" onclick="selectStage('des')">Desarrollo</div>
+              <div class="pill" data-stage="fin" onclick="selectStage('fin')">Final</div>
+              <div class="pill" data-stage="custom" onclick="selectStage('custom')">Custom</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Parámetros del cultivo <span style="color:var(--text3); font-size:10px; font-family: 'DM Mono', monospace; font-weight:normal;">(editables)</span></div>
+        <div class="grid-3">
+          <div class="field">
+            <label>Kc <span class="req">*</span> <span class="opt">(0.2–1.4)</span></label>
+            <input type="number" id="kc_value" placeholder="0.00" step="0.01" min="0.1" max="1.6" oninput="autoSave()">
+            <div class="field-error" id="err_kc">Kc debe estar entre 0.1 y 1.6</div>
+            <div class="field-hint" id="kc_hint">Autollenado desde catálogo</div>
+          </div>
+          <div class="field">
+            <label>Prof. radicular Zr <span class="req">*</span> <span class="opt">(m)</span></label>
+            <input type="number" id="zr_m" placeholder="0.00" step="0.05" min="0.05" max="3" oninput="autoSave()">
+            <div class="field-error" id="err_zr">Zr debe ser mayor a 0</div>
+          </div>
+          <div class="field">
+            <label>Agotamiento p <span class="req">*</span> <span class="opt">(0.2–0.7)</span></label>
+            <input type="number" id="p_value" placeholder="0.00" step="0.01" min="0.1" max="0.8" oninput="autoSave()">
+            <div class="field-error" id="err_p">p debe estar entre 0.1 y 0.8</div>
+          </div>
+        </div>
+        <div id="crop_summary" style="margin-top:14px; display:none;"></div>
+      </div>
+
+      <div class="actions-bar">
+        <button class="btn btn-secondary" onclick="showScreen('parcela')">← Parcela</button>
+        <button class="btn btn-primary" onclick="validateAndGo('cultivo','clima')">Continuar → Clima</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════ C: CLIMA ══════════════════ -->
+    <div class="screen" id="screen-clima">
+      <div class="screen-header">
+        <h2>C. Clima — ET₀ y lluvia</h2>
+        <p>Evapotranspiración de referencia y precipitación efectiva</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Fecha del cálculo</div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Fecha <span class="req">*</span></label>
+            <input type="date" id="calc_date" oninput="autoSave()">
+          </div>
+          <div class="field">
+            <label>Período de trabajo</label>
+            <div class="pill-group">
+              <div class="pill selected" id="period-day" onclick="selectPeriod('day')">Diario (mm/d)</div>
+              <div class="pill" id="period-week" onclick="selectPeriod('week')">Semanal (mm/sem)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Evapotranspiración ET₀</div>
+        <div class="grid-2">
+          <div class="field">
+            <label>ET₀ <span class="req">*</span></label>
+            <div class="field-unit">
+              <input type="number" id="eto_value" placeholder="0.0" step="0.1" min="0" oninput="updateEtoCalc(); autoSave()">
+              <select id="eto_unit" disabled style="cursor:default; opacity:0.6;">
+                <option id="eto_unit_opt" value="mm_d">mm/d</option>
+              </select>
+            </div>
+            <div class="field-error" id="err_eto">ET₀ debe ser ≥ 0</div>
+            <div class="field-hint">Rango típico: 2–10 mm/d. Alerta si &gt; 12 mm/d</div>
+          </div>
+          <div class="field">
+            <label>ET₀ normalizada</label>
+            <div style="background: var(--bg); border: 1px solid var(--border2); border-radius:7px; padding: 9px 12px; font-family: 'DM Mono', monospace; font-size:13px; color: var(--text2);" id="eto_normalized">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Lluvia efectiva Pe <span class="opt">(opcional — por defecto 0)</span></div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Pe</label>
+            <div class="field-unit">
+              <input type="number" id="pe_value" placeholder="0.0" step="0.1" min="0" oninput="autoSave()">
+              <select id="pe_unit" disabled style="cursor:default; opacity:0.6;">
+                <option id="pe_unit_opt" value="mm_d">mm/d</option>
+              </select>
+            </div>
+          </div>
+          <div class="field" style="justify-content: flex-end;">
+            <div style="font-size:12px; color:var(--text3); padding: 9px 0; line-height:1.6;">
+              Pe es la fracción de lluvia aprovechable por el cultivo.<br>
+              Si no hay lluvia, dejar en 0.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-bar">
+        <button class="btn btn-secondary" onclick="showScreen('cultivo')">← Cultivo</button>
+        <button class="btn btn-primary" onclick="validateAndGo('clima','suelo')">Continuar → Suelo</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════ D: SUELO ══════════════════ -->
+    <div class="screen" id="screen-suelo">
+      <div class="screen-header">
+        <h2>D. Suelo y Humedad Disponible</h2>
+        <p>TAW, RAW y características del suelo</p>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" id="tab-rapido" onclick="soilTab('rapido')">Modo rápido (textura)</div>
+        <div class="tab" id="tab-tecnico" onclick="soilTab('tecnico')">Modo técnico (CC/PMP)</div>
+      </div>
+
+      <!-- Modo rápido -->
+      <div id="suelo-rapido">
+        <div class="card">
+          <div class="card-title">Textura de suelo</div>
+          <div class="grid-2">
+            <div class="field">
+              <label>Textura <span class="req">*</span></label>
+              <select id="soil_texture" onchange="loadSoilDefaults(); autoSave()">
+                <option value="">— Selecciona textura —</option>
+                <option value="Arenoso">Arenoso — TAW≈80 mm/m</option>
+                <option value="Franco arenoso">Franco arenoso — TAW≈110 mm/m</option>
+                <option value="Franco">Franco — TAW≈140 mm/m</option>
+                <option value="Franco limoso">Franco limoso — TAW≈160 mm/m</option>
+                <option value="Franco arcilloso">Franco arcilloso — TAW≈170 mm/m</option>
+                <option value="Arcilloso">Arcilloso — TAW≈150 mm/m</option>
+              </select>
+              <div class="field-error" id="err_soil">Selecciona una textura</div>
+            </div>
+            <div class="field">
+              <label>Profundidad efectiva Zef <span class="req">*</span> <span class="opt">(m)</span></label>
+              <input type="number" id="z_eff_m" placeholder="Igual a Zr" step="0.05" min="0.05" oninput="calcTAW(); autoSave()">
+              <div class="field-hint">≤ Zr del cultivo. Valor máximo Zr = <span id="zr_reminder">—</span> m</div>
+              <div class="field-error" id="err_zeff">Profundidad debe ser &gt; 0</div>
+            </div>
+          </div>
+        </div>
+        <div class="card" id="taw_preview" style="display:none;">
+          <div class="card-title">Agua disponible calculada</div>
+          <div class="result-grid">
+            <div class="result-card">
+              <div class="r-label">TAW</div>
+              <div class="r-value" id="taw_val">—</div>
+              <div class="r-unit">mm</div>
+              <div class="r-formula">1000 · (θFC−θWP) · Zef</div>
+            </div>
+            <div class="result-card blue">
+              <div class="r-label">RAW</div>
+              <div class="r-value" id="raw_val">—</div>
+              <div class="r-unit">mm</div>
+              <div class="r-formula">p · TAW</div>
+            </div>
+            <div class="result-card">
+              <div class="r-label">θFC def.</div>
+              <div class="r-value" id="tfc_val" style="font-size:20px;">—</div>
+              <div class="r-unit">m³/m³</div>
+            </div>
+            <div class="result-card">
+              <div class="r-label">θWP def.</div>
+              <div class="r-value" id="twp_val" style="font-size:20px;">—</div>
+              <div class="r-unit">m³/m³</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modo técnico -->
+      <div id="suelo-tecnico" style="display:none;">
+        <div class="card">
+          <div class="card-title">Parámetros hídricos del suelo <span class="tag tag-blue">Técnico</span></div>
+          <div class="grid-3">
+            <div class="field">
+              <label>θFC — Capacidad de campo <span class="opt">(m³/m³)</span></label>
+              <input type="number" id="theta_fc" placeholder="0.27" step="0.01" min="0.10" max="0.55" oninput="calcTAWtech(); autoSave()">
+              <div class="field-hint">Rango: 0.10–0.50. Debe ser &gt; θWP</div>
+              <div class="field-error" id="err_tfc">θFC debe ser mayor que θWP</div>
+            </div>
+            <div class="field">
+              <label>θWP — Punto marchitez <span class="opt">(m³/m³)</span></label>
+              <input type="number" id="theta_wp" placeholder="0.13" step="0.01" min="0.03" max="0.35" oninput="calcTAWtech(); autoSave()">
+              <div class="field-hint">Rango: 0.03–0.35</div>
+            </div>
+            <div class="field">
+              <label>Profundidad efectiva Zef <span class="opt">(m)</span></label>
+              <input type="number" id="z_eff_m_tech" placeholder="Igual a Zr" step="0.05" min="0.05" oninput="calcTAWtech(); autoSave()">
+              <div class="field-hint">≤ Zr del cultivo</div>
+            </div>
+          </div>
+          <div class="grid-3" style="margin-top:14px;">
+            <div class="field">
+              <label>θi — Humedad inicial <span class="opt">(opcional, m³/m³)</span></label>
+              <input type="number" id="theta_i" placeholder="opcional" step="0.01" min="0" max="0.6" oninput="autoSave()">
+            </div>
+            <div class="field col-span-2">
+              <label>&nbsp;</label>
+              <div style="color:var(--text3); font-size:12px; padding: 9px 0; line-height:1.6;">Si ingresas θi, el sistema calculará el déficit actual del suelo.</div>
+            </div>
+          </div>
+        </div>
+        <div class="card" id="taw_preview_tech" style="display:none;">
+          <div class="card-title">Agua disponible calculada</div>
+          <div class="result-grid">
+            <div class="result-card">
+              <div class="r-label">TAW</div>
+              <div class="r-value" id="taw_val_tech">—</div>
+              <div class="r-unit">mm</div>
+              <div class="r-formula">1000·(θFC−θWP)·Zef</div>
+            </div>
+            <div class="result-card blue">
+              <div class="r-label">RAW</div>
+              <div class="r-value" id="raw_val_tech">—</div>
+              <div class="r-unit">mm</div>
+              <div class="r-formula">p · TAW</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-bar">
+        <button class="btn btn-secondary" onclick="showScreen('clima')">← Clima</button>
+        <button class="btn btn-primary" onclick="validateAndGo('suelo','riego')">Continuar → Riego</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════ E: RIEGO ══════════════════ -->
+    <div class="screen" id="screen-riego">
+      <div class="screen-header">
+        <h2>E. Sistema de Riego</h2>
+        <p>Método, eficiencia, caudal y sectores</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Método de riego</div>
+        <div class="pill-group" id="method-pills">
+          <div class="pill selected" data-method="goteo" onclick="selectMethod('goteo')">💧 Goteo</div>
+          <div class="pill" data-method="aspersion" onclick="selectMethod('aspersion')">🌂 Aspersión</div>
+          <div class="pill" data-method="micro" onclick="selectMethod('micro')">🔆 Microaspersión</div>
+          <div class="pill" data-method="surcos" onclick="selectMethod('surcos')">〰️ Surcos</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Eficiencia y sectores</div>
+        <div class="grid-3">
+          <div class="field">
+            <label>Eficiencia Ea <span class="req">*</span> <span class="opt">(0.4–0.95)</span></label>
+            <input type="number" id="ea_value" placeholder="0.90" step="0.01" min="0.3" max="1" oninput="autoSave()">
+            <div class="field-hint" id="ea_hint">Default goteo: 0.90</div>
+            <div class="field-error" id="err_ea">Ea debe estar entre 0.4 y 0.95</div>
+          </div>
+          <div class="field">
+            <label>N° de sectores <span class="req">*</span></label>
+            <input type="number" id="sectors_n" placeholder="1" step="1" min="1" value="1" oninput="autoSave()">
+            <div class="field-error" id="err_sectors">Debe haber al menos 1 sector</div>
+          </div>
+          <div class="field">
+            <label>&nbsp;</label>
+            <div style="background: var(--bg); border: 1px solid var(--border2); border-radius:7px; padding: 9px 12px; font-size:12px; color: var(--text2); line-height:1.6;">
+              Rango Ea: <span id="ea_range_text">0.85–0.95</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Caudal disponible</div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Caudal total <span class="req">*</span></label>
+            <div class="field-unit">
+              <input type="number" id="q_total_value" placeholder="0.0" step="0.1" min="0" oninput="calcQsector(); autoSave()">
+              <select id="q_total_unit" onchange="calcQsector(); autoSave()">
+                <option value="Lps">L/s</option>
+                <option value="m3h">m³/h</option>
+              </select>
+            </div>
+            <div class="field-error" id="err_q">El caudal debe ser mayor a 0</div>
+          </div>
+          <div class="field">
+            <label>Caudal por sector</label>
+            <div style="background: var(--bg); border: 1px solid var(--border2); border-radius:7px; padding: 9px 12px; font-family: 'DM Mono', monospace; font-size:13px; color: var(--text2);" id="q_sector_display">—</div>
+            <div class="field-hint">Q total / N° sectores (convertido a m³/h)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-bar">
+        <button class="btn btn-secondary" onclick="showScreen('suelo')">← Suelo</button>
+        <button class="btn btn-primary" onclick="validateAndGo('riego','resultados'); calcResults()">Calcular → Resultados</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════ F: RESULTADOS ══════════════════ -->
+    <div class="screen" id="screen-resultados">
+      <div class="screen-header">
+        <h2>F. Resultados — Receta de Riego</h2>
+        <p id="result_subtitle">Parcela: —</p>
+      </div>
+
+      <div id="alerts_container" class="alerts-container"></div>
+
+      <div class="highlight-box" id="recipe_box">
+        <h3>📋 Receta de riego para hoy / este período</h3>
+        <div class="highlight-row"><span class="hl-label">Aplica (lámina bruta)</span><span class="hl-value" id="r_gir">— mm</span></div>
+        <div class="highlight-row"><span class="hl-label">Equivale a volumen total</span><span class="hl-value" id="r_vol">— m³</span></div>
+        <div class="highlight-row"><span class="hl-label">Tiempo de riego total</span><span class="hl-value" id="r_time_total">— h</span></div>
+        <div class="highlight-row"><span class="hl-label">Tiempo por sector</span><span class="hl-value" id="r_time_sector">— h</span></div>
+        <div class="highlight-row"><span class="hl-label">Frecuencia sugerida</span><span class="hl-value" id="r_freq">— días</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Parámetros calculados</div>
+        <div class="result-grid">
+          <div class="result-card">
+            <div class="r-label">ETc</div>
+            <div class="r-value" id="r_etc">—</div>
+            <div class="r-unit">mm/d</div>
+            <div class="r-formula">Kc × ET₀</div>
+          </div>
+          <div class="result-card blue">
+            <div class="r-label">NIR (neta)</div>
+            <div class="r-value" id="r_nir">—</div>
+            <div class="r-unit">mm/d</div>
+            <div class="r-formula">max(0, ETc − Pe)</div>
+          </div>
+          <div class="result-card warn">
+            <div class="r-label">GIR (bruta)</div>
+            <div class="r-value" id="r_gir2">—</div>
+            <div class="r-unit">mm/d</div>
+            <div class="r-formula">NIR / Ea</div>
+          </div>
+          <div class="result-card">
+            <div class="r-label">TAW</div>
+            <div class="r-value" id="r_taw">—</div>
+            <div class="r-unit">mm</div>
+            <div class="r-formula">1000·(θFC−θWP)·Zef</div>
+          </div>
+          <div class="result-card blue">
+            <div class="r-label">RAW</div>
+            <div class="r-value" id="r_raw">—</div>
+            <div class="r-unit">mm</div>
+            <div class="r-formula">p · TAW</div>
+          </div>
+          <div class="result-card">
+            <div class="r-label">Vol. bruto</div>
+            <div class="r-value" id="r_vol2">—</div>
+            <div class="r-unit">m³</div>
+            <div class="r-formula">GIR·Área/1000</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="assumptions" id="assumptions_box">
+        <h4>Supuestos utilizados</h4>
+        <div class="assumption-row" id="assumptions_row"></div>
+      </div>
+
+      <div class="actions-bar">
+        <button class="btn btn-secondary" onclick="showScreen('riego')">← Riego</button>
+        <button class="btn btn-secondary" onclick="saveCalc()">💾 Guardar cálculo</button>
+        <button class="btn btn-secondary" onclick="showShare()">📤 Compartir</button>
+        <button class="btn btn-primary" onclick="showScreen('hidraulica')">→ Hidráulica</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════ G: HIDRÁULICA ══════════════════ -->
+    <div class="screen" id="screen-hidraulica">
+      <div class="screen-header">
+        <h2>G. Hidráulica Básica</h2>
+        <p>Chequeo rápido de velocidades, presión y tiempos por sector</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Datos hidráulicos <span class="opt">(todos opcionales)</span></div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Presión disponible <span class="opt">(bar)</span></label>
+            <input type="number" id="pressure_in_bar" placeholder="0–10" step="0.1" min="0" max="10" oninput="calcHydraulic()">
+            <div class="field-hint">1 bar ≈ 10.2 m.c.a.</div>
+          </div>
+          <div class="field">
+            <label>Longitud línea principal <span class="opt">(m)</span></label>
+            <input type="number" id="main_len_m" placeholder="metros" step="1" min="0" oninput="calcHydraulic()">
+          </div>
+          <div class="field">
+            <label>Diámetro tubería <span class="opt">(mm)</span></label>
+            <select id="main_diam_mm" onchange="calcHydraulic()">
+              <option value="">— Selecciona —</option>
+              <option value="25">25 mm (1")</option>
+              <option value="32">32 mm (1¼")</option>
+              <option value="40">40 mm (1½")</option>
+              <option value="50">50 mm (2")</option>
+              <option value="63">63 mm (2½")</option>
+              <option value="75">75 mm (3")</option>
+              <option value="90">90 mm (3½")</option>
+              <option value="110">110 mm (4")</option>
+              <option value="140">140 mm (5½")</option>
+              <option value="160">160 mm (6")</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Desnivel Δz <span class="opt">(m)</span></label>
+            <input type="number" id="delta_z_m" placeholder="-200 a +200" step="0.5" min="-200" max="200" oninput="calcHydraulic()">
+            <div class="field-hint">Positivo = sube, Negativo = baja</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="hydraulic_results">
+        <div class="card-title">Resultados hidráulicos</div>
+        <div id="hydro_alerts" class="alerts-container"></div>
+        <div class="result-grid" id="hydro_result_grid">
+          <div class="result-card">
+            <div class="r-label">Caudal m. principal</div>
+            <div class="r-value" id="h_q">—</div>
+            <div class="r-unit">m³/h</div>
+          </div>
+          <div class="result-card blue">
+            <div class="r-label">Velocidad</div>
+            <div class="r-value" id="h_vel">—</div>
+            <div class="r-unit">m/s</div>
+            <div class="r-formula">Q/A (si diám.)</div>
+          </div>
+          <div class="result-card">
+            <div class="r-label">Presión ingresada</div>
+            <div class="r-value" id="h_pres">—</div>
+            <div class="r-unit">bar / mca</div>
+          </div>
+        </div>
+        <div style="margin-top:12px; font-size:12px; color:var(--text3); font-family: 'DM Mono', monospace;">
+          ⓘ Chequeo básico sin pérdidas. Hidráulica Pro (Hazen-Williams) disponible en v2.
+        </div>
+      </div>
+
+      <div class="actions-bar">
+        <button class="btn btn-secondary" onclick="showScreen('resultados')">← Resultados</button>
+        <button class="btn btn-primary" onclick="saveCalc()">💾 Guardar todo</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════ CATÁLOGOS ══════════════════ -->
+    <div class="screen" id="screen-catalogos">
+      <div class="screen-header">
+        <h2>Catálogos</h2>
+        <p>Valores de referencia FAO-56 usados en los cálculos</p>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" id="cat-tab-crops" onclick="catTab('crops')">Cultivos</div>
+        <div class="tab" id="cat-tab-soils" onclick="catTab('soils')">Suelos</div>
+        <div class="tab" id="cat-tab-methods" onclick="catTab('methods')">Métodos riego</div>
+      </div>
+
+      <div id="cat-crops" class="card" style="padding:0; overflow:hidden;">
+        <table class="catalog-table">
+          <thead><tr><th>Cultivo</th><th>Kc ini</th><th>Kc des</th><th>Kc med</th><th>Kc fin</th><th>Zr (m)</th><th>p</th></tr></thead>
+          <tbody id="cat_crops_body"></tbody>
+        </table>
+      </div>
+
+      <div id="cat-soils" class="card" style="padding:0; overflow:hidden; display:none;">
+        <table class="catalog-table">
+          <thead><tr><th>Textura</th><th>TAW aprox (mm/m)</th><th>θFC def</th><th>θWP def</th></tr></thead>
+          <tbody id="cat_soils_body"></tbody>
+        </table>
+      </div>
+
+      <div id="cat-methods" class="card" style="padding:0; overflow:hidden; display:none;">
+        <table class="catalog-table">
+          <thead><tr><th>Método</th><th>Ea default</th><th>Rango típico</th></tr></thead>
+          <tbody id="cat_methods_body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════ HISTORIAL ══════════════════ -->
+    <div class="screen" id="screen-historial">
+      <div class="screen-header">
+        <h2>Historial de cálculos</h2>
+        <p>Últimos 10 cálculos guardados</p>
+      </div>
+      <div id="history_list"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- SHARE MODAL -->
+<div class="share-box" id="shareBox">
+  <div class="share-box-inner">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h3 style="font-family:'DM Serif Display',serif; font-size:20px;">Resumen del cálculo</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeShare()">✕ Cerrar</button>
+    </div>
+    <div class="field">
+      <label>Texto copiable</label>
+      <textarea id="share_text" readonly onclick="this.select()"></textarea>
+    </div>
+    <div style="margin-top:12px; display:flex; gap:10px;">
+      <button class="btn btn-primary" onclick="copyShare()">📋 Copiar</button>
+      <button class="btn btn-secondary" onclick="closeShare()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// DATA CATALOGS
+// ══════════════════════════════════════════════════════
+const CROPS = {
+  'Papa':              { ini:0.50, des:0.85, med:1.15, fin:0.75, zr:0.60, p:0.35 },
+  'Maíz (grano)':     { ini:0.40, des:0.80, med:1.15, fin:0.70, zr:1.20, p:0.55 },
+  'Lechuga':          { ini:0.70, des:0.90, med:1.05, fin:0.95, zr:0.30, p:0.30 },
+  'Tomate (campo)':   { ini:0.60, des:0.90, med:1.15, fin:0.80, zr:0.80, p:0.40 },
+  'Cebolla':          { ini:0.70, des:0.90, med:1.05, fin:0.80, zr:0.40, p:0.30 },
+  'Zanahoria':        { ini:0.70, des:0.90, med:1.05, fin:0.85, zr:0.50, p:0.35 },
+  'Brócoli':          { ini:0.70, des:0.95, med:1.05, fin:0.95, zr:0.50, p:0.35 },
+  'Fréjol (arbustivo)':{ ini:0.40, des:0.80, med:1.10, fin:0.70, zr:0.90, p:0.45 },
+  'Alfalfa (corte)':  { ini:null, des:null, med:1.05, fin:null, zr:1.50, p:0.55 },
+  'Pasto (raigrás/mezcla)':{ ini:0.90, des:1.00, med:1.05, fin:0.95, zr:0.60, p:0.50 },
+  'Fresa':            { ini:0.50, des:0.75, med:0.95, fin:0.80, zr:0.30, p:0.30 },
+};
+
+const SOILS = {
+  'Arenoso':           { taw:80,  tfc:0.15, twp:0.07 },
+  'Franco arenoso':    { taw:110, tfc:0.20, twp:0.10 },
+  'Franco':            { taw:140, tfc:0.27, twp:0.13 },
+  'Franco limoso':     { taw:160, tfc:0.32, twp:0.16 },
+  'Franco arcilloso':  { taw:170, tfc:0.34, twp:0.17 },
+  'Arcilloso':         { taw:150, tfc:0.38, twp:0.22 },
+};
+
+const METHODS = {
+  'goteo':     { name:'Goteo',         ea:0.90, range:'0.85–0.95' },
+  'aspersion': { name:'Aspersión',     ea:0.75, range:'0.70–0.85' },
+  'micro':     { name:'Microaspersión',ea:0.85, range:'0.75–0.90' },
+  'surcos':    { name:'Surcos',        ea:0.55, range:'0.40–0.70' },
+};
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let state = {
+  techMode: false,
+  soilMode: 'rapido',
+  selectedStage: 'med',
+  selectedMethod: 'goteo',
+  periodMode: 'day',
+  projects: [],
+  history: [],
+  currentProject: null,
+  calculated: false,
+  results: {},
+};
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+window.onload = () => {
+  loadStorage();
+  renderProjects();
+  renderHistory();
+  renderCatalogs();
+  // Set today's date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('calc_date').value = today;
+  // Set default method
+  selectMethod('goteo');
+  // Set default sector
+  document.getElementById('sectors_n').value = '1';
+};
+
+function loadStorage() {
+  try {
+    const saved = localStorage.getItem('agroRiegoState');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state.projects = parsed.projects || [];
+      state.history = parsed.history || [];
+    }
+  } catch(e) {}
+}
+
+function saveStorage() {
+  try {
+    localStorage.setItem('agroRiegoState', JSON.stringify({
+      projects: state.projects,
+      history: state.history
+    }));
+  } catch(e) {}
+}
+
+function autoSave() {
+  // minimal autosave trigger
+}
+
+// ══════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  const nav = document.getElementById('nav-' + id);
+  if (nav) nav.classList.add('active');
+  if (id === 'resultados') calcResults();
+  if (id === 'historial') renderHistory();
+}
+
+// ══════════════════════════════════════════════════════
+// TOGGLES
+// ══════════════════════════════════════════════════════
+function toggleTechMode() {
+  state.techMode = !state.techMode;
+  const btn = document.getElementById('modeToggle');
+  btn.classList.toggle('active', state.techMode);
+  btn.textContent = state.techMode ? '🔬 Modo técnico ON' : '🔬 Modo técnico';
+  document.querySelectorAll('[id^="techCard-"]').forEach(el => {
+    el.style.display = state.techMode ? 'block' : 'none';
+  });
+}
+
+function selectStage(stage) {
+  state.selectedStage = stage;
+  document.querySelectorAll('#stage-pills .pill').forEach(p => p.classList.remove('selected'));
+  document.querySelector(`[data-stage="${stage}"]`).classList.add('selected');
+  loadCropDefaults();
+}
+
+function selectMethod(method) {
+  state.selectedMethod = method;
+  document.querySelectorAll('#method-pills .pill').forEach(p => p.classList.remove('selected'));
+  document.querySelector(`[data-method="${method}"]`).classList.add('selected');
+  const m = METHODS[method];
+  document.getElementById('ea_value').value = m.ea;
+  document.getElementById('ea_hint').textContent = `Default ${m.name}: ${m.ea} | Rango: ${m.range}`;
+  document.getElementById('ea_range_text').textContent = m.range;
+}
+
+function selectPeriod(p) {
+  state.periodMode = p;
+  document.getElementById('period-day').classList.toggle('selected', p === 'day');
+  document.getElementById('period-week').classList.toggle('selected', p === 'week');
+  const unit = p === 'day' ? 'mm/d' : 'mm/sem';
+  document.getElementById('eto_unit_opt').textContent = unit;
+  document.getElementById('pe_unit_opt').textContent = unit;
+  updateEtoCalc();
+}
+
+function soilTab(tab) {
+  state.soilMode = tab;
+  document.getElementById('tab-rapido').classList.toggle('active', tab === 'rapido');
+  document.getElementById('tab-tecnico').classList.toggle('active', tab === 'tecnico');
+  document.getElementById('suelo-rapido').style.display = tab === 'rapido' ? 'block' : 'none';
+  document.getElementById('suelo-tecnico').style.display = tab === 'tecnico' ? 'block' : 'none';
+}
+
+function catTab(tab) {
+  ['crops','soils','methods'].forEach(t => {
+    document.getElementById('cat-' + t).style.display = t === tab ? 'block' : 'none';
+    document.getElementById('cat-tab-' + t).classList.toggle('active', t === tab);
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// CATALOG DEFAULTS
+// ══════════════════════════════════════════════════════
+function loadCropDefaults() {
+  const crop = document.getElementById('crop_name').value;
+  if (!crop || crop === 'Personalizado') return;
+  const data = CROPS[crop];
+  if (!data) return;
+  const stage = state.selectedStage;
+  const kc = data[stage === 'ini' ? 'ini' : stage === 'des' ? 'des' : stage === 'fin' ? 'fin' : 'med'];
+  document.getElementById('kc_value').value = kc !== null ? kc.toFixed(2) : '';
+  document.getElementById('zr_m').value = data.zr.toFixed(2);
+  document.getElementById('p_value').value = data.p.toFixed(2);
+  document.getElementById('kc_hint').textContent = `Kc ${stage} para ${crop} (FAO-56)`;
+  document.getElementById('zr_reminder').textContent = data.zr.toFixed(2);
+  // Set zeff to zr as default
+  if (!document.getElementById('z_eff_m').value) document.getElementById('z_eff_m').value = data.zr.toFixed(2);
+  calcTAW();
+}
+
+function loadSoilDefaults() {
+  const tex = document.getElementById('soil_texture').value;
+  if (!tex) return;
+  const data = SOILS[tex];
+  calcTAW();
+}
+
+// ══════════════════════════════════════════════════════
+// CALCULATIONS
+// ══════════════════════════════════════════════════════
+function updateAreaCalc() {
+  const val = parseFloat(document.getElementById('area_value').value);
+  const unit = document.getElementById('area_unit').value;
+  if (!val || val <= 0) { document.getElementById('area_converted').textContent = '—'; return; }
+  if (unit === 'ha') {
+    document.getElementById('area_converted').textContent = `${(val * 10000).toLocaleString('es')} m²`;
+  } else {
+    document.getElementById('area_converted').textContent = `${(val / 10000).toFixed(4)} ha`;
+  }
+}
+
+function getAreaM2() {
+  const val = parseFloat(document.getElementById('area_value').value) || 0;
+  const unit = document.getElementById('area_unit').value;
+  return unit === 'ha' ? val * 10000 : val;
+}
+
+function updateEtoCalc() {
+  const val = parseFloat(document.getElementById('eto_value').value) || 0;
+  const etoNorm = state.periodMode === 'week' ? (val / 7).toFixed(2) : val.toFixed(2);
+  document.getElementById('eto_normalized').textContent = `${etoNorm} mm/d`;
+}
+
+function getEtoDay() {
+  const val = parseFloat(document.getElementById('eto_value').value) || 0;
+  return state.periodMode === 'week' ? val / 7 : val;
+}
+
+function getPeDay() {
+  const val = parseFloat(document.getElementById('pe_value').value) || 0;
+  return state.periodMode === 'week' ? val / 7 : val;
+}
+
+function calcTAW() {
+  const tex = document.getElementById('soil_texture').value;
+  const zeff = parseFloat(document.getElementById('z_eff_m').value) || 0;
+  const p = parseFloat(document.getElementById('p_value').value) || 0.35;
+  if (!tex || zeff <= 0) { document.getElementById('taw_preview').style.display = 'none'; return; }
+  const soil = SOILS[tex];
+  const taw = soil.taw * zeff; // approx using mm/m × z
+  const raw = p * taw;
+  document.getElementById('taw_preview').style.display = 'block';
+  document.getElementById('taw_val').textContent = taw.toFixed(1);
+  document.getElementById('raw_val').textContent = raw.toFixed(1);
+  document.getElementById('tfc_val').textContent = soil.tfc.toFixed(2);
+  document.getElementById('twp_val').textContent = soil.twp.toFixed(2);
+}
+
+function calcTAWtech() {
+  const tfc = parseFloat(document.getElementById('theta_fc').value) || 0;
+  const twp = parseFloat(document.getElementById('theta_wp').value) || 0;
+  const zeff = parseFloat(document.getElementById('z_eff_m_tech').value) || 0;
+  const p = parseFloat(document.getElementById('p_value').value) || 0.35;
+  if (tfc <= 0 || twp <= 0 || zeff <= 0) { document.getElementById('taw_preview_tech').style.display = 'none'; return; }
+  const taw = 1000 * (tfc - twp) * zeff;
+  const raw = p * taw;
+  document.getElementById('taw_preview_tech').style.display = taw > 0 ? 'block' : 'none';
+  document.getElementById('taw_val_tech').textContent = taw.toFixed(1);
+  document.getElementById('raw_val_tech').textContent = raw.toFixed(1);
+}
+
+function getTAWRAW() {
+  let taw = 0, raw = 0;
+  const p = parseFloat(document.getElementById('p_value').value) || 0.35;
+  if (state.soilMode === 'rapido') {
+    const tex = document.getElementById('soil_texture').value;
+    const zeff = parseFloat(document.getElementById('z_eff_m').value) || 0;
+    if (tex && zeff > 0) {
+      taw = SOILS[tex].taw * zeff;
+      raw = p * taw;
+    }
+  } else {
+    const tfc = parseFloat(document.getElementById('theta_fc').value) || 0;
+    const twp = parseFloat(document.getElementById('theta_wp').value) || 0;
+    const zeff = parseFloat(document.getElementById('z_eff_m_tech').value) || 0;
+    if (tfc > twp && zeff > 0) {
+      taw = 1000 * (tfc - twp) * zeff;
+      raw = p * taw;
+    }
+  }
+  return { taw, raw };
+}
+
+function calcQsector() {
+  const q = parseFloat(document.getElementById('q_total_value').value) || 0;
+  const unit = document.getElementById('q_total_unit').value;
+  const sec = parseInt(document.getElementById('sectors_n').value) || 1;
+  const qM3h = unit === 'Lps' ? q * 3.6 : q;
+  const qSec = sec > 0 ? qM3h / sec : 0;
+  document.getElementById('q_sector_display').textContent = q > 0 ? `${qSec.toFixed(2)} m³/h por sector` : '—';
+}
+
+function getQm3h() {
+  const q = parseFloat(document.getElementById('q_total_value').value) || 0;
+  const unit = document.getElementById('q_total_unit').value;
+  return unit === 'Lps' ? q * 3.6 : q;
+}
+
+function calcResults() {
+  const kc = parseFloat(document.getElementById('kc_value').value) || 0;
+  const eto = getEtoDay();
+  const pe = getPeDay();
+  const ea = parseFloat(document.getElementById('ea_value').value) || 0.9;
+  const { taw, raw } = getTAWRAW();
+  const areaM2 = getAreaM2();
+  const qTotal = getQm3h();
+  const sectors = parseInt(document.getElementById('sectors_n').value) || 1;
+  const parcel = document.getElementById('parcel_id').value || '—';
+
+  // Core calculations
+  const etc = kc * eto;
+  const nir = Math.max(0, etc - pe);
+  const gir = ea > 0 ? nir / ea : 0;
+  const freq = etc > 0 ? raw / etc : 0;
+  const volNir = nir * areaM2 / 1000;
+  const volGir = gir * areaM2 / 1000;
+  const qSector = sectors > 0 ? qTotal / sectors : qTotal;
+  const timeTot = qTotal > 0 ? volGir / qTotal : 0;
+  const timeSec = qSector > 0 ? (volGir / sectors) / qSector : 0;
+
+  // Store
+  state.results = { kc, eto, pe, ea, taw, raw, areaM2, qTotal, sectors, parcel, etc, nir, gir, freq, volGir, timeTot, timeSec };
+
+  // Update UI
+  document.getElementById('result_subtitle').textContent = `Parcela: ${parcel} · Fecha: ${document.getElementById('calc_date').value || 'N/A'}`;
+
+  const fmtN = (n, d=1) => isNaN(n) || !isFinite(n) ? '—' : n.toFixed(d);
+
+  document.getElementById('r_gir').textContent = `${fmtN(gir)} mm/d`;
+  document.getElementById('r_vol').textContent = `${fmtN(volGir, 2)} m³`;
+  document.getElementById('r_time_total').textContent = `${fmtN(timeTot, 2)} h`;
+  document.getElementById('r_time_sector').textContent = `${fmtN(timeSec, 2)} h`;
+  document.getElementById('r_freq').textContent = `cada ${fmtN(freq, 1)} días`;
+
+  document.getElementById('r_etc').textContent = fmtN(etc);
+  document.getElementById('r_nir').textContent = fmtN(nir);
+  document.getElementById('r_gir2').textContent = fmtN(gir);
+  document.getElementById('r_taw').textContent = fmtN(taw, 1);
+  document.getElementById('r_raw').textContent = fmtN(raw, 1);
+  document.getElementById('r_vol2').textContent = fmtN(volGir, 2);
+
+  // Alerts
+  const alerts = [];
+  if (eto === 0 && kc > 0) alerts.push({ type:'warn', msg:'⚠️ ET₀ = 0 pero Kc > 0 — revisa el dato climático.' });
+  if (gir > raw && raw > 0) alerts.push({ type:'danger', msg:'🚨 Lámina bruta por evento supera RAW — riesgo de percolación profunda.' });
+  if (freq < 1 && freq > 0) alerts.push({ type:'warn', msg:'⚡ Frecuencia < 1 día — considera dividir en 2 eventos diarios.' });
+  if (kc > 1.4) alerts.push({ type:'warn', msg:`⚠️ Kc = ${kc} está fuera del rango típico (0.2–1.4). Verifica.` });
+  if (ea < 0.5) alerts.push({ type:'warn', msg:`⚠️ Eficiencia Ea = ${ea} parece baja. Revisa el método de riego.` });
+  if (timeTot > 24) alerts.push({ type:'warn', msg:`⏰ Tiempo total de riego: ${fmtN(timeTot,1)} h — puede superar un día. Considera más caudal o más sectores.` });
+  if (gir > 0 && taw > 0 && nir === 0 && pe > 0) alerts.push({ type:'info', msg:'ℹ️ NIR = 0 — la lluvia efectiva cubre el requerimiento del cultivo. No se necesita riego hoy.' });
+
+  const cont = document.getElementById('alerts_container');
+  cont.innerHTML = alerts.length ? alerts.map(a => `<div class="alert alert-${a.type}">${a.msg}</div>`).join('') :
+    `<div class="alert alert-ok">✅ Sin alertas. Los parámetros están dentro de rangos normales.</div>`;
+
+  // Assumptions
+  const crop = document.getElementById('crop_name').value || 'N/A';
+  const stage = state.selectedStage;
+  const method = METHODS[state.selectedMethod]?.name || 'N/A';
+  document.getElementById('assumptions_row').innerHTML = [
+    `ET₀: <span>${fmtN(eto)} mm/d</span>`,
+    `Kc: <span>${kc} (${crop}, ${stage})</span>`,
+    `Pe: <span>${fmtN(pe)} mm/d</span>`,
+    `Ea: <span>${ea} (${method})</span>`,
+    `TAW: <span>${fmtN(taw,1)} mm</span>`,
+    `RAW: <span>${fmtN(raw,1)} mm</span>`,
+    `Área: <span>${fmtN(areaM2/10000,4)} ha</span>`,
+    `Sectores: <span>${sectors}</span>`,
+  ].map(t => `<span class="assumption-tag">${t}</span>`).join('');
+
+  state.calculated = true;
+}
+
+function calcHydraulic() {
+  const pressure = parseFloat(document.getElementById('pressure_in_bar').value) || 0;
+  const diam = parseFloat(document.getElementById('main_diam_mm').value) || 0;
+  const deltaZ = parseFloat(document.getElementById('delta_z_m').value) || 0;
+  const qM3h = getQm3h();
+  const qM3s = qM3h / 3600;
+
+  // Velocity check
+  let vel = null;
+  if (diam > 0 && qM3h > 0) {
+    const r = diam / 2000; // m
+    const area = Math.PI * r * r;
+    vel = qM3s / area;
+  }
+
+  const alerts = [];
+  if (vel !== null) {
+    if (vel > 2.0) alerts.push({ type:'danger', msg:`🚨 Velocidad ${vel.toFixed(2)} m/s supera 2.0 m/s — riesgo de golpe de ariete. Usar diámetro mayor.` });
+    else if (vel > 1.5) alerts.push({ type:'warn', msg:`⚠️ Velocidad ${vel.toFixed(2)} m/s supera 1.5 m/s — zona de precaución.` });
+    else alerts.push({ type:'ok', msg:`✅ Velocidad ${vel.toFixed(2)} m/s — dentro del rango aceptable (< 1.5 m/s).` });
+  }
+  if (pressure > 0 && pressure < 1.0 && (state.selectedMethod === 'goteo' || state.selectedMethod === 'micro')) {
+    alerts.push({ type:'warn', msg:`⚠️ Presión disponible ${pressure} bar podría no ser suficiente para goteo/microaspersión (mín. ~1.0–1.5 bar).` });
+  }
+  if (Math.abs(deltaZ) > 30) alerts.push({ type:'warn', msg:`⚠️ Desnivel grande (${deltaZ > 0 ? '+' : ''}${deltaZ} m) — considerar válvulas reductoras de presión o regulación.` });
+
+  const cont = document.getElementById('hydro_alerts');
+  cont.innerHTML = alerts.length ? alerts.map(a => `<div class="alert alert-${a.type}">${a.msg}</div>`).join('') : '';
+
+  document.getElementById('h_q').textContent = qM3h.toFixed(2);
+  document.getElementById('h_vel').textContent = vel !== null ? vel.toFixed(2) : '—';
+  document.getElementById('h_pres').textContent = pressure > 0 ? `${pressure} bar / ${(pressure * 10.2).toFixed(1)} mca` : '—';
+}
+
+// ══════════════════════════════════════════════════════
+// VALIDATION
+// ══════════════════════════════════════════════════════
+const validators = {
+  parcela: () => {
+    let ok = true;
+    const pid = document.getElementById('parcel_id').value.trim();
+    const area = parseFloat(document.getElementById('area_value').value);
+    showErr('err_parcel_id', !pid);
+    showErr('err_area', !area || area <= 0);
+    if (!pid || !area || area <= 0) ok = false;
+    return ok;
+  },
+  cultivo: () => {
+    let ok = true;
+    const crop = document.getElementById('crop_name').value;
+    const kc = parseFloat(document.getElementById('kc_value').value);
+    const zr = parseFloat(document.getElementById('zr_m').value);
+    const p = parseFloat(document.getElementById('p_value').value);
+    showErr('err_crop', !crop);
+    showErr('err_kc', !kc || kc < 0.1 || kc > 1.6);
+    showErr('err_zr', !zr || zr <= 0);
+    showErr('err_p', !p || p < 0.1 || p > 0.8);
+    if (!crop || !kc || kc < 0.1 || !zr || zr <= 0 || !p) ok = false;
+    return ok;
+  },
+  clima: () => {
+    const eto = parseFloat(document.getElementById('eto_value').value);
+    showErr('err_eto', eto < 0 || isNaN(eto));
+    return eto >= 0 && !isNaN(eto);
+  },
+  suelo: () => {
+    if (state.soilMode === 'rapido') {
+      const tex = document.getElementById('soil_texture').value;
+      const zeff = parseFloat(document.getElementById('z_eff_m').value);
+      showErr('err_soil', !tex);
+      showErr('err_zeff', !zeff || zeff <= 0);
+      return tex && zeff > 0;
+    } else {
+      const tfc = parseFloat(document.getElementById('theta_fc').value);
+      const twp = parseFloat(document.getElementById('theta_wp').value);
+      showErr('err_tfc', tfc <= twp);
+      return tfc > twp;
+    }
+  },
+  riego: () => {
+    const ea = parseFloat(document.getElementById('ea_value').value);
+    const q = parseFloat(document.getElementById('q_total_value').value);
+    const sec = parseInt(document.getElementById('sectors_n').value);
+    showErr('err_ea', !ea || ea < 0.3 || ea > 1);
+    showErr('err_q', !q || q <= 0);
+    showErr('err_sectors', !sec || sec < 1);
+    return ea >= 0.3 && q > 0 && sec >= 1;
+  }
+};
+
+function showErr(id, show) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('show', show);
+}
+
+function validateAndGo(from, to) {
+  const v = validators[from];
+  if (!v || v()) showScreen(to);
+}
+
+// ══════════════════════════════════════════════════════
+// PROJECTS & HISTORY
+// ══════════════════════════════════════════════════════
+function newProject() {
+  const name = prompt('Nombre del proyecto / finca:');
+  if (!name) return;
+  state.projects.push({ id: Date.now(), name, parcels: [], created: new Date().toLocaleDateString('es') });
+  saveStorage();
+  renderProjects();
+}
+
+function renderProjects() {
+  const el = document.getElementById('projects-list');
+  if (!state.projects.length) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">🌱</div><p>No tienes proyectos aún. Crea uno o haz un cálculo rápido.</p></div>`;
+    return;
+  }
+  el.innerHTML = state.projects.map(p => `
+    <div class="project-card" onclick="openProject(${p.id})">
+      <div><div class="p-name">${p.name}</div><div class="p-meta">Creado: ${p.created} · ${p.parcels?.length||0} parcelas</div></div>
+      <div class="p-actions">
+        <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation(); deleteProject(${p.id})">🗑️</button>
+        <button class="btn btn-sm btn-secondary">Abrir →</button>
+      </div>
+    </div>`).join('');
+}
+
+function openProject(id) {
+  state.currentProject = id;
+  showScreen('parcela');
+}
+
+function deleteProject(id) {
+  if (confirm('¿Eliminar proyecto?')) {
+    state.projects = state.projects.filter(p => p.id !== id);
+    saveStorage();
+    renderProjects();
+  }
+}
+
+function saveCalc() {
+  if (!state.calculated) { alert('Primero calcula los resultados en la pantalla F.'); return; }
+  const r = state.results;
+  const entry = {
+    id: Date.now(),
+    date: new Date().toLocaleString('es'),
+    parcel: r.parcel,
+    crop: document.getElementById('crop_name').value,
+    etc: r.etc?.toFixed(2),
+    gir: r.gir?.toFixed(2),
+    vol: r.volGir?.toFixed(2),
+    time: r.timeTot?.toFixed(2),
+    freq: r.freq?.toFixed(1),
+  };
+  state.history.unshift(entry);
+  if (state.history.length > 10) state.history.pop();
+  saveStorage();
+  alert('✅ Cálculo guardado en historial');
+}
+
+function renderHistory() {
+  const el = document.getElementById('history_list');
+  if (!state.history.length) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>No hay cálculos guardados aún.</p></div>`;
+    return;
+  }
+  el.innerHTML = state.history.map(h => `
+    <div class="history-item">
+      <div>
+        <div class="h-title">${h.parcel} — ${h.crop}</div>
+        <div class="h-meta">${h.date} · ETc=${h.etc} mm/d · GIR=${h.gir} mm/d · Vol=${h.vol} m³ · ${h.time}h · cada ${h.freq}d</div>
+      </div>
+      <span class="h-restore" onclick="restoreCalc(${h.id})">Restaurar →</span>
+    </div>`).join('');
+}
+
+function restoreCalc(id) {
+  alert('Para restaurar un cálculo, recarga los datos manualmente en cada pantalla. (Función completa en v2)');
+}
+
+// ══════════════════════════════════════════════════════
+// SHARE
+// ══════════════════════════════════════════════════════
+function showShare() {
+  const r = state.results;
+  const fmtN = (n, d=2) => (n === undefined || isNaN(n)) ? 'N/A' : n.toFixed(d);
+  const crop = document.getElementById('crop_name').value || 'N/A';
+  const parcel = document.getElementById('parcel_id').value || 'N/A';
+  const date = document.getElementById('calc_date').value || 'N/A';
+
+  const txt = `
+╔══════════════════════════════════════╗
+║     RECETA DE RIEGO — AgroRiego      ║
+╚══════════════════════════════════════╝
+
+Parcela: ${parcel}
+Cultivo: ${crop} (etapa ${state.selectedStage})
+Fecha:   ${date}
+
+──────────────────────────────────────
+RECOMENDACIÓN
+──────────────────────────────────────
+Lámina bruta a aplicar:  ${fmtN(r.gir)} mm/d
+Volumen total:           ${fmtN(r.volGir)} m³
+Tiempo total riego:      ${fmtN(r.timeTot)} h
+Tiempo por sector:       ${fmtN(r.timeSec)} h
+Frecuencia sugerida:     cada ${fmtN(r.freq,1)} días
+
+──────────────────────────────────────
+PARÁMETROS CALCULADOS
+──────────────────────────────────────
+ETc = ${fmtN(r.etc)} mm/d   (Kc=${r.kc} × ET₀=${fmtN(r.eto)} mm/d)
+NIR = ${fmtN(r.nir)} mm/d   (max(0, ETc − Pe=${fmtN(r.pe)}))
+GIR = ${fmtN(r.gir)} mm/d   (NIR / Ea=${r.ea})
+TAW = ${fmtN(r.taw,1)} mm
+RAW = ${fmtN(r.raw,1)} mm
+
+──────────────────────────────────────
+Generado con AgroRiego MVP v1.0
+`.trim();
+
+  document.getElementById('share_text').value = txt;
+  document.getElementById('shareBox').classList.add('open');
+}
+
+function closeShare() { document.getElementById('shareBox').classList.remove('open'); }
+
+function copyShare() {
+  const el = document.getElementById('share_text');
+  el.select();
+  document.execCommand('copy');
+  alert('✅ Copiado al portapapeles');
+}
+
+// ══════════════════════════════════════════════════════
+// CATALOGS RENDER
+// ══════════════════════════════════════════════════════
+function renderCatalogs() {
+  // Crops
+  document.getElementById('cat_crops_body').innerHTML = Object.entries(CROPS).map(([name, d]) => `
+    <tr onclick="pickCropFromCatalog('${name}')">
+      <td>${name}</td>
+      <td class="num">${d.ini ?? '—'}</td>
+      <td class="num">${d.des ?? '—'}</td>
+      <td class="num">${d.med}</td>
+      <td class="num">${d.fin ?? '—'}</td>
+      <td class="num">${d.zr}</td>
+      <td class="num">${d.p}</td>
+    </tr>`).join('');
+
+  // Soils
+  document.getElementById('cat_soils_body').innerHTML = Object.entries(SOILS).map(([name, d]) => `
+    <tr>
+      <td>${name}</td>
+      <td class="num">${d.taw}</td>
+      <td class="num">${d.tfc}</td>
+      <td class="num">${d.twp}</td>
+    </tr>`).join('');
+
+  // Methods
+  document.getElementById('cat_methods_body').innerHTML = Object.entries(METHODS).map(([key, d]) => `
+    <tr>
+      <td>${d.name}</td>
+      <td class="num">${d.ea}</td>
+      <td class="num">${d.range}</td>
+    </tr>`).join('');
+}
+
+function pickCropFromCatalog(name) {
+  document.getElementById('crop_name').value = name;
+  loadCropDefaults();
+  showScreen('cultivo');
+}
+</script>
+</body>
+</html>
