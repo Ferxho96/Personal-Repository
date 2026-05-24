@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bioinsumos Orgánicos - Guía Interactiva</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green-50: #EAF3DE; --green-100: #C0DD97; --green-200: #97C459;
+    --green-600: #3B6D11; --green-800: #27500A; --green-900: #173404;
+    --teal-50: #E1F5EE; --teal-100: #9FE1CB; --teal-600: #0F6E56; --teal-800: #085041;
+    --amber-50: #FAEEDA; --amber-100: #FAC775; --amber-600: #854F0B; --amber-800: #633806;
+    --blue-50: #E6F1FB; --blue-600: #185FA5; --blue-800: #0C447C;
+    --coral-50: #FAECE7; --coral-100: #F5C4B3; --coral-600: #993C1D; --coral-800: #712B13;
+    --purple-50: #EEEDFE; --purple-600: #534AB7; --purple-800: #3C3489;
+    --gray-50: #F1EFE8; --gray-100: #D3D1C7; --gray-600: #5F5E5A; --gray-800: #444441;
+  }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #f8f9fa; color: #1a1a1a; line-height: 1.6; }
+  
+  .header { background: linear-gradient(135deg, #27500A 0%, #3B6D11 50%, #639922 100%); color: white; padding: 2.5rem 2rem; text-align: center; }
+  .header h1 { font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .header p { font-size: 1rem; opacity: 0.9; }
+  
+  .nav { background: white; border-bottom: 1px solid #e0e0e0; position: sticky; top: 0; z-index: 100; }
+  .nav-inner { display: flex; overflow-x: auto; gap: 0; max-width: 1100px; margin: 0 auto; }
+  .nav-btn { padding: 1rem 1.2rem; border: none; background: none; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: #666; white-space: nowrap; border-bottom: 3px solid transparent; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+  .nav-btn:hover { color: #27500A; background: #f0f9e8; }
+  .nav-btn.active { color: #27500A; border-bottom-color: #27500A; }
+  
+  .main { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; }
+  .section { display: none; }
+  .section.active { display: block; }
+  
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  
+  .card { background: white; border-radius: 12px; border: 1px solid #e8e8e8; padding: 1.25rem; }
+  .card-green { background: var(--green-50); border-color: var(--green-100); }
+  .card-teal { background: var(--teal-50); border-color: var(--teal-100); }
+  .card-amber { background: var(--amber-50); border-color: var(--amber-100); }
+  .card-blue { background: var(--blue-50); border-color: #b5d4f4; }
+  .card-coral { background: var(--coral-50); border-color: var(--coral-100); }
+  .card-purple { background: var(--purple-50); border-color: #cecbf6; }
+  
+  .section-title { font-size: 1.5rem; font-weight: 600; color: var(--green-800); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; }
+  .section-title i { font-size: 1.6rem; }
+  
+  .card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 8px; }
+  .card p { font-size: 0.9rem; color: #444; margin-bottom: 0.5rem; }
+  .card ul { padding-left: 1.2rem; font-size: 0.88rem; color: #444; }
+  .card ul li { margin-bottom: 4px; }
+  
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 500; margin: 3px 2px; }
+  .badge-green { background: var(--green-100); color: var(--green-800); }
+  .badge-teal { background: var(--teal-100); color: var(--teal-800); }
+  .badge-amber { background: var(--amber-100); color: var(--amber-800); }
+  .badge-coral { background: var(--coral-100); color: var(--coral-800); }
+  
+  .step-list { counter-reset: steps; }
+  .step-item { display: flex; gap: 1rem; margin-bottom: 1rem; align-items: flex-start; padding: 0.75rem 1rem; background: white; border-radius: 8px; border: 1px solid #e8e8e8; }
+  .step-num { background: var(--green-600); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600; flex-shrink: 0; margin-top: 2px; }
+  .step-text { font-size: 0.9rem; color: #333; }
+  .step-note { font-size: 0.82rem; color: #666; margin-top: 4px; }
+  
+  .calc-container { background: white; border-radius: 12px; border: 1px solid #e8e8e8; overflow: hidden; }
+  .calc-header { background: var(--green-800); color: white; padding: 1.25rem 1.5rem; }
+  .calc-header h2 { font-size: 1.15rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .calc-body { padding: 1.5rem; }
+  
+  .form-group { margin-bottom: 1.25rem; }
+  .form-group label { display: block; font-size: 0.88rem; font-weight: 500; color: #333; margin-bottom: 6px; }
+  .form-group select, .form-group input[type=number] { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem; background: white; color: #333; outline: none; }
+  .form-group select:focus, .form-group input:focus { border-color: #3B6D11; box-shadow: 0 0 0 3px rgba(59,109,17,0.1); }
+  
+  .calc-btn { background: var(--green-600); color: white; border: none; padding: 10px 24px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; cursor: pointer; width: 100%; margin-top: 0.5rem; transition: background 0.2s; }
+  .calc-btn:hover { background: var(--green-800); }
+  
+  .result-box { background: var(--green-50); border: 1px solid var(--green-100); border-radius: 10px; padding: 1.25rem; margin-top: 1.25rem; display: none; }
+  .result-box h3 { font-size: 1rem; font-weight: 600; color: var(--green-800); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+  .ingredient-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #d4e9c2; font-size: 0.88rem; }
+  .ingredient-row:last-child { border-bottom: none; }
+  .ingredient-name { color: #444; }
+  .ingredient-amount { font-weight: 600; color: var(--green-800); }
+  .cost-box { background: var(--amber-50); border: 1px solid var(--amber-100); border-radius: 8px; padding: 0.75rem 1rem; margin-top: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
+  .cost-label { font-size: 0.88rem; color: var(--amber-800); }
+  .cost-value { font-size: 1.1rem; font-weight: 600; color: var(--amber-800); }
+  
+  .info-box { background: var(--blue-50); border-left: 3px solid var(--blue-600); border-radius: 0 8px 8px 0; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.88rem; color: var(--blue-800); }
+  .warn-box { background: var(--amber-50); border-left: 3px solid var(--amber-600); border-radius: 0 8px 8px 0; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.88rem; color: var(--amber-800); }
+  
+  .dosage-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  .dosage-table th { background: var(--green-800); color: white; padding: 8px 12px; text-align: left; font-weight: 500; }
+  .dosage-table td { padding: 7px 12px; border-bottom: 1px solid #eee; }
+  .dosage-table tr:last-child td { border-bottom: none; }
+  .dosage-table tr:nth-child(even) { background: var(--green-50); }
+  
+  .benefit-icon { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
+  .benefit-title { font-size: 0.95rem; font-weight: 600; color: var(--green-800); margin-bottom: 0.3rem; }
+  .benefit-desc { font-size: 0.83rem; color: #555; }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .tab-btn { padding: 6px 14px; border: 1px solid #ddd; background: white; border-radius: 20px; font-size: 0.83rem; cursor: pointer; color: #555; transition: all 0.2s; }
+  .tab-btn.active, .tab-btn:hover { background: var(--green-600); color: white; border-color: var(--green-600); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  @media (max-width: 600px) {
+    .header h1 { font-size: 1.5rem; }
+    .main { padding: 1rem 0.75rem; }
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1><i class="ti ti-plant-2"></i> Bioinsumos Orgánicos</h1>
+  <p>Guía interactiva de elaboración, uso y aplicación · Ministerio de Agricultura y Ganadería del Ecuador</p>
+</div>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="showSection('intro', this)"><i class="ti ti-info-circle"></i> Introducción</button>
+    <button class="nav-btn" onclick="showSection('microorganismos', this)"><i class="ti ti-microscope"></i> Microorganismos</button>
+    <button class="nav-btn" onclick="showSection('abonos-liquidos', this)"><i class="ti ti-droplet"></i> Abonos Líquidos</button>
+    <button class="nav-btn" onclick="showSection('abonos-solidos', this)"><i class="ti ti-mountain"></i> Abonos Sólidos</button>
+    <button class="nav-btn" onclick="showSection('lombricultura', this)"><i class="ti ti-worm"></i> Lombricultura</button>
+    <button class="nav-btn" onclick="showSection('calculadora', this)"><i class="ti ti-calculator"></i> Calculadora</button>
+  </div>
+</nav>
+
+<div class="main">
+
+<!-- INTRO -->
+<div id="intro" class="section active">
+  <div class="section-title"><i class="ti ti-leaf"></i> ¿Qué son los bioinsumos?</div>
+  
+  <div class="info-box">
+    <strong>Definición:</strong> Un bioinsumo es una sustancia o mezcla de sustancias de origen biológico o natural que promueve el crecimiento de plantas, su desarrollo, la descomposición de materia orgánica y el control de plagas.
+  </div>
+
+  <div class="grid-3" style="margin-bottom:1.5rem">
+    <div class="card card-green" style="text-align:center">
+      <span class="benefit-icon">🌱</span>
+      <div class="benefit-title">Fortalecimiento radicular</div>
+      <div class="benefit-desc">Mejora el desarrollo de raíces y la fertilidad natural del suelo</div>
+    </div>
+    <div class="card card-teal" style="text-align:center">
+      <span class="benefit-icon">🍃</span>
+      <div class="benefit-title">Aumento de follaje</div>
+      <div class="benefit-desc">Promueve mayor desarrollo foliar y productividad</div>
+    </div>
+    <div class="card card-amber" style="text-align:center">
+      <span class="benefit-icon">💰</span>
+      <div class="benefit-title">Reducción de costos</div>
+      <div class="benefit-desc">Disminuye el presupuesto en agroquímicos sintéticos</div>
+    </div>
+    <div class="card card-coral" style="text-align:center">
+      <span class="benefit-icon">🐛</span>
+      <div class="benefit-title">Control de plagas</div>
+      <div class="benefit-desc">Manejo integral de plagas de forma natural</div>
+    </div>
+    <div class="card card-blue" style="text-align:center">
+      <span class="benefit-icon">♻️</span>
+      <div class="benefit-title">Baja residualidad</div>
+      <div class="benefit-desc">No deja residuos tóxicos en el suelo ni los alimentos</div>
+    </div>
+    <div class="card card-purple" style="text-align:center">
+      <span class="benefit-icon">🌿</span>
+      <div class="benefit-title">Agricultura orgánica</div>
+      <div class="benefit-desc">Compatible con sistemas de producción agroecológica</div>
+    </div>
+  </div>
+
+  <div class="section-title" style="font-size:1.15rem"><i class="ti ti-chart-bar"></i> Bioinsumos de mayor demanda</div>
+  <div class="grid-4">
+    <div class="card" style="text-align:center">
+      <i class="ti ti-seeding" style="font-size:2rem; color:#3B6D11"></i>
+      <p style="font-weight:600; margin-top:0.5rem; color:#27500A">Abonos orgánicos</p>
+      <p style="font-size:0.82rem;">Sólidos, líquidos y abonos verdes</p>
+    </div>
+    <div class="card" style="text-align:center">
+      <i class="ti ti-flask" style="font-size:2rem; color:#0F6E56"></i>
+      <p style="font-weight:600; margin-top:0.5rem; color:#085041">Biofertilizantes</p>
+      <p style="font-size:0.82rem;">Fijadores de N, movilizadores de P y K</p>
+    </div>
+    <div class="card" style="text-align:center">
+      <i class="ti ti-bug" style="font-size:2rem; color:#854F0B"></i>
+      <p style="font-weight:600; margin-top:0.5rem; color:#633806">Biocontroladores</p>
+      <p style="font-size:0.82rem;">Organismos para control biológico</p>
+    </div>
+    <div class="card" style="text-align:center">
+      <i class="ti ti-microscope" style="font-size:2rem; color:#534AB7"></i>
+      <p style="font-weight:600; margin-top:0.5rem; color:#3C3489">Insectos benéficos</p>
+      <p style="font-size:0.82rem;">Controladores naturales de plagas</p>
+    </div>
+  </div>
+
+  <div class="section-title" style="font-size:1.15rem"><i class="ti ti-recycle"></i> Fuentes de materia orgánica disponibles</div>
+  <div class="grid-2">
+    <div class="card card-green">
+      <h3><i class="ti ti-trash" style="color:#3B6D11"></i> Residuos orgánicos</h3>
+      <ul>
+        <li>Estiércoles de animales</li>
+        <li>Residuos de cosechas y podas</li>
+        <li>Residuos de la agroindustria</li>
+        <li>Basuras domésticas biodegradables</li>
+        <li>Materia de cuerpos de agua</li>
+      </ul>
+    </div>
+    <div class="card card-amber">
+      <h3><i class="ti ti-mountain" style="color:#854F0B"></i> Rocas minerales</h3>
+      <ul>
+        <li>Rocas fosfatadas</li>
+        <li>Rocas calcáreas (cal)</li>
+        <li>Rocas potásicas</li>
+        <li>Rocas azufradas</li>
+        <li>Zeolitas</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- MICROORGANISMOS -->
+<div id="microorganismos" class="section">
+  <div class="section-title"><i class="ti ti-microscope"></i> Microorganismos de Montaña (MM)</div>
+
+  <div class="info-box">
+    Los MM son microorganismos benéficos (hongos, bacterias, micorrizas, levaduras y otros) que habitan en suelos de montañas o bosques nativos <strong>no intervenidos por al menos 3 años</strong>. Son la base de muchos bioinsumos.
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('mm-solido', this, 'mm-tabs')">Producción sólida</button>
+    <button class="tab-btn" onclick="showTab('mm-liquido', this, 'mm-tabs')">Reproducción líquida</button>
+    <button class="tab-btn" onclick="showTab('mm-te', this, 'mm-tabs')">Forma de Té (EMAS)</button>
+    <button class="tab-btn" onclick="showTab('mm-usos', this, 'mm-tabs')">Usos y dosis</button>
+  </div>
+
+  <div id="mm-tabs">
+    <div id="mm-solido" class="tab-panel active">
+      <div class="grid-2">
+        <div class="card card-green">
+          <h3><i class="ti ti-list" style="color:#3B6D11"></i> Ingredientes (tanque 200 L)</h3>
+          <table class="dosage-table">
+            <tr><th>Ingrediente</th><th>Cantidad</th></tr>
+            <tr><td>Hojarasca de montaña</td><td>4 sacos</td></tr>
+            <tr><td>Polvillo de arroz (o salvado de trigo)</td><td>2 sacos</td></tr>
+            <tr><td>Melaza (miel de caña)</td><td>16 litros</td></tr>
+            <tr><td>Tanque plástico con tapa y sello</td><td>1 unidad (200 L)</td></tr>
+          </table>
+          <div class="warn-box" style="margin-top:0.75rem; border-radius:8px">
+            <strong>Importante:</strong> No aplicar agua ni suero de leche en la preparación sólida.
+          </div>
+        </div>
+        <div class="card">
+          <h3><i class="ti ti-steps" style="color:#3B6D11"></i> Pasos de elaboración</h3>
+          <div class="step-list">
+            <div class="step-item"><div class="step-num">1</div><div class="step-text">Mezclar el polvillo de arroz con los microorganismos de montaña (hojarasca)</div></div>
+            <div class="step-item"><div class="step-num">2</div><div class="step-text">Mezclar bien todos los materiales de manera uniforme</div></div>
+            <div class="step-item"><div class="step-num">3</div><div class="step-text">Realizar amasado manual para homogeneizar</div></div>
+            <div class="step-item"><div class="step-num">4</div><div class="step-text">Trasvasar la mezcla al tanque de 200 litros</div></div>
+            <div class="step-item"><div class="step-num">5</div><div class="step-text">Pisonear (compactar) bien el contenido</div></div>
+            <div class="step-item"><div class="step-num">6</div><div class="step-text">Sellar herméticamente y reposar<div class="step-note">Sierra: 45 días · Costa: 30 días</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card card-teal" style="margin-top:1rem">
+        <h3><i class="ti ti-refresh" style="color:#0F6E56"></i> Reproducción (hasta 4 veces)</h3>
+        <p>Agregar 10 kg de microorganismos sólidos en la base del tanque + 2 sacos de salvado de arroz + 1 galón de melaza, repitiendo el procedimiento.</p>
+        <p style="margin-top:0.5rem"><strong>Costo estimado por kg:</strong> $0.60</p>
+      </div>
+    </div>
+
+    <div id="mm-liquido" class="tab-panel">
+      <div class="grid-2">
+        <div class="card card-green">
+          <h3><i class="ti ti-droplet" style="color:#3B6D11"></i> Ingredientes (200 L)</h3>
+          <table class="dosage-table">
+            <tr><th>Ingrediente</th><th>Cantidad</th></tr>
+            <tr><td>Microorganismo sólido</td><td>5 kg</td></tr>
+            <tr><td>Miel de caña (melaza)</td><td>4 litros</td></tr>
+            <tr><td>Agua (o suero de leche)</td><td>180 litros</td></tr>
+          </table>
+          <p style="font-size:0.85rem; color:#555; margin-top:0.75rem">Mezclar y fermentar en tanque de 200 litros. <strong>Costo por litro: $0.35</strong></p>
+        </div>
+        <div class="card">
+          <h3><i class="ti ti-calendar" style="color:#3B6D11"></i> Aplicaciones (MM líquido)</h3>
+          <div class="step-item" style="margin-bottom:0.5rem"><div class="step-num" style="background:#0F6E56">3d</div><div class="step-text">A los 3 días: control de lacha (enfermedades foliares)</div></div>
+          <div class="step-item" style="margin-bottom:0.5rem"><div class="step-num" style="background:#0F6E56">10d</div><div class="step-text">A los 10 días: para fortalecer las plantas</div></div>
+          <div class="step-item"><div class="step-num" style="background:#0F6E56">15d</div><div class="step-text">A los 15 días: mantenimiento general</div></div>
+          <div class="info-box" style="margin-top:0.75rem">
+            <strong>Foliar:</strong> 5 L por cada 100 L de agua + 4 L de melaza como adherente<br>
+            <strong>Suelo:</strong> 50 L de agua + 50 L de MM líquido
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mm-te" class="tab-panel">
+      <div class="grid-2">
+        <div class="card card-teal">
+          <h3><i class="ti ti-list" style="color:#0F6E56"></i> Ingredientes EMAS en Té (200 L)</h3>
+          <table class="dosage-table">
+            <tr><th>Ingrediente</th><th>Cantidad</th></tr>
+            <tr><td>Suero de leche (o agua)</td><td>160 litros</td></tr>
+            <tr><td>Melaza</td><td>10 litros</td></tr>
+            <tr><td>Ceniza</td><td>4 libras</td></tr>
+            <tr><td>Diatomitas</td><td>1 kg</td></tr>
+            <tr><td>Roca fosfórica</td><td>2 kg</td></tr>
+            <tr><td>MM sólidos (en bolsa de tela)</td><td>22 libras</td></tr>
+            <tr><td>Botella de agua + piola</td><td>1 unidad</td></tr>
+          </table>
+          <p style="margin-top:0.75rem; font-size:0.85rem; color:#085041"><strong>Rendimiento: 160 litros de EMAS líquidos</strong></p>
+        </div>
+        <div class="card">
+          <h3><i class="ti ti-steps" style="color:#3B6D11"></i> Procedimiento</h3>
+          <div class="step-item"><div class="step-num">1</div><div class="step-text">Colocar el suero en el tanque de 200 L</div></div>
+          <div class="step-item"><div class="step-num">2</div><div class="step-text">Añadir melaza, ceniza, diatomitas y roca fosfórica, batir bien</div></div>
+          <div class="step-item"><div class="step-num">3</div><div class="step-text">Colocar los MM sólidos en una bolsa de tela y sumergirla en la mezcla</div></div>
+          <div class="step-item"><div class="step-num">4</div><div class="step-text">Tapar herméticamente con la trampa de agua (botella + piola)</div></div>
+          <div class="step-item"><div class="step-num">5</div><div class="step-text">Fermentar 1 mes o hasta que la botella deje de burbujear</div></div>
+          <div class="step-item"><div class="step-num">6</div><div class="step-text">Listo cuando tenga olor a chicha y presencia de nata blanca</div></div>
+          <p style="font-size:0.85rem; color:#555; margin-top:0.5rem"><strong>Uso:</strong> 2 L por cada 20 L de agua, semanal o quincenal</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="mm-usos" class="tab-panel">
+      <div class="grid-2">
+        <div class="card card-green">
+          <h3><i class="ti ti-checklist" style="color:#3B6D11"></i> Usos en agricultura</h3>
+          <ul>
+            <li>Elaboración de humus de lombriz (5 lbs/cama)</li>
+            <li>Elaboración de bocashi (20 lbs/tonelada)</li>
+            <li>Biol de microorganismos (22 lbs sólidos en bolsa)</li>
+            <li>Todos los tipos de cultivos</li>
+          </ul>
+        </div>
+        <div class="card card-teal">
+          <h3><i class="ti ti-heart-rate-monitor" style="color:#0F6E56"></i> Usos en alimentación animal</h3>
+          <p style="font-size:0.85rem; margin-bottom:0.75rem">El consumo continuo mejora la flora intestinal e incrementa la ganancia de peso</p>
+          <table class="dosage-table">
+            <tr><th>Especie</th><th>Dosis diaria</th></tr>
+            <tr><td>Bovinos</td><td>50 gr</td></tr>
+            <tr><td>Cerdos</td><td>30 gr</td></tr>
+            <tr><td>Gallinas de postura</td><td>15 gr</td></tr>
+            <tr><td>Pollos de engorde</td><td>10 gr</td></tr>
+            <tr><td>Tilapias</td><td>2 gr</td></tr>
+          </table>
+        </div>
+        <div class="card card-blue" style="grid-column: 1/-1">
+          <h3><i class="ti ti-plant" style="color:#185FA5"></i> Beneficios del suelo</h3>
+          <div class="grid-4" style="margin:0">
+            <div style="text-align:center; padding:0.5rem">
+              <i class="ti ti-recycle" style="font-size:1.5rem; color:#185FA5"></i>
+              <p style="font-size:0.82rem; margin-top:4px">Descompone materia orgánica</p>
+            </div>
+            <div style="text-align:center; padding:0.5rem">
+              <i class="ti ti-arrows-exchange" style="font-size:1.5rem; color:#185FA5"></i>
+              <p style="font-size:0.82rem; margin-top:4px">Fija y recicla nutrientes</p>
+            </div>
+            <div style="text-align:center; padding:0.5rem">
+              <i class="ti ti-filter" style="font-size:1.5rem; color:#185FA5"></i>
+              <p style="font-size:0.82rem; margin-top:4px">Degrada sustancias tóxicas (pesticidas)</p>
+            </div>
+            <div style="text-align:center; padding:0.5rem">
+              <i class="ti ti-topology-star" style="font-size:1.5rem; color:#185FA5"></i>
+              <p style="font-size:0.82rem; margin-top:4px">Mejora textura del suelo</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ABONOS LIQUIDOS -->
+<div id="abonos-liquidos" class="section">
+  <div class="section-title"><i class="ti ti-droplet"></i> Abonos Líquidos</div>
+  
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('biol-basico', this, 'liq-tabs')">Biol básico</button>
+    <button class="tab-btn" onclick="showTab('biol-enriquecido', this, 'liq-tabs')">Biol enriquecido</button>
+    <button class="tab-btn" onclick="showTab('superbiol', this, 'liq-tabs')">Súper Biol</button>
+    <button class="tab-btn" onclick="showTab('te-estiercol', this, 'liq-tabs')">Té de estiércol</button>
+    <button class="tab-btn" onclick="showTab('abono-frutas', this, 'liq-tabs')">Abono de frutas</button>
+  </div>
+
+  <div id="liq-tabs">
+    <div id="biol-basico" class="tab-panel active">
+      <div class="info-box">El BIOL es un biofertilizante líquido con alta carga de microorganismos benéficos y sus metabolitos. Sirve como fertilizante foliar, de suelo y para tratamiento de semillas.</div>
+      <div class="grid-2">
+        <div class="card card-green">
+          <h3><i class="ti ti-list" style="color:#3B6D11"></i> Ingredientes (200 L)</h3>
+          <table class="dosage-table">
+            <tr><th>Producto</th><th>Cantidad</th></tr>
+            <tr><td>Estiércol fresco de vaca</td><td>50 kg</td></tr>
+            <tr><td>Melaza</td><td>1 galón</td></tr>
+            <tr><td>Suero de leche</td><td>6 litros</td></tr>
+            <tr><td>Ceniza</td><td>6 kg</td></tr>
+            <tr><td>Harina de rocas</td><td>6 kg</td></tr>
+            <tr><td>Roca fosfórica</td><td>5 kg</td></tr>
+            <tr><td>Boro</td><td>1.5 kg</td></tr>
+            <tr><td>Hojas de alfalfa picada</td><td>10 kg</td></tr>
+            <tr><td>Levadura</td><td>100 gr</td></tr>
+            <tr><td>Agua (completar)</td><td>~100 litros</td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h3><i class="ti ti-spray" style="color:#3B6D11"></i> Aplicación del Biol</h3>
+          <p style="font-size:0.88rem; font-weight:500; color:#27500A; margin-bottom:0.5rem">Al follaje:</p>
+          <table class="dosage-table" style="margin-bottom:0.75rem">
+            <tr><th>Solución</th><th>Biol (L)</th><th>Agua (L)</th></tr>
+            <tr><td>10%</td><td>2</td><td>18</td></tr>
+            <tr><td>15%</td><td>3</td><td>17</td></tr>
+            <tr><td>25%</td><td>5</td><td>15</td></tr>
+          </table>
+          <p style="font-size:0.88rem; font-weight:500; color:#27500A; margin-bottom:0.25rem">Al suelo:</p>
+          <p style="font-size:0.85rem; color:#444; margin-bottom:0.75rem">1–3 litros de Biol por cada 100 L de agua de riego (gravedad, aspersión o goteo)</p>
+          <p style="font-size:0.88rem; font-weight:500; color:#27500A; margin-bottom:0.25rem">A la semilla:</p>
+          <p style="font-size:0.85rem; color:#444; margin-bottom:0.75rem">Sumergir en solución al 15%: 20 min para semillas suaves, hasta 12 h para cutícula gruesa</p>
+          <p style="font-size:0.88rem; font-weight:500; color:#27500A; margin-bottom:0.25rem">A colinos, bulbos, estacas:</p>
+          <p style="font-size:0.85rem; color:#444">Sumergir en solución al 15% por no más de 5 minutos</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="biol-enriquecido" class="tab-panel">
+      <div class="info-box">El Biol enriquecido añade sales minerales para proporcionar micronutrientes adicionales a las plantas. Se aplica a los 35 días de preparado.</div>
+      <div class="grid-2">
+        <div class="card card-green">
+          <h3>Ingredientes orgánicos</h3>
+          <table class="dosage-table">
+            <tr><th>Ingrediente</th><th>Cantidad</th></tr>
+            <tr><td>Ceniza</td><td>3 kg</td></tr>
+            <tr><td>Roca fosfórica</td><td>5 kg</td></tr>
+            <tr><td>Leche o suero</td><td>5 litros</td></tr>
+            <tr><td>Melaza o panela molida</td><td>5 litros</td></tr>
+          </table>
+        </div>
+        <div class="card card-blue">
+          <h3>Ingredientes minerales</h3>
+          <table class="dosage-table">
+            <tr><th>Ingrediente</th><th>Cantidad</th></tr>
+            <tr><td>Sulfato de zinc</td><td>1.5 kg</td></tr>
+            <tr><td>Sulfato de magnesio</td><td>1.5 kg</td></tr>
+            <tr><td>Ácido bórico</td><td>1.5 kg</td></tr>
+            <tr><td>Óxido de manganeso</td><td>0.8 kg</td></tr>
+            <tr><td>Sulfato de cobre</td><td>1.5 kg</td></tr>
+            <tr><td>Cloruro de cobalto</td><td>0.1 kg</td></tr>
+            <tr><td>Sulfato ferroso</td><td>0.1 kg</td></tr>
+            <tr><td>Molibdato de sodio</td><td>0.1 kg</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="info-box">Aplicar a partir del día 35: cada 8–15 días, dosis recomendada de 1 L por bomba de 20 litros.</div>
+    </div>
+
+    <div id="superbiol" class="tab-panel">
+      <div class="info-box">El Súper Biol sirve para engrose de frutos, nutrición de la planta y el suelo. Combina sales minerales con microorganismos. Rendimiento: 160 litros · Costo: $0.58/litro</div>
+      <div class="grid-2">
+        <div class="card card-amber">
+          <h3>Sales minerales</h3>
+          <table class="dosage-table">
+            <tr><th>Ingrediente</th><th>Cantidad</th></tr>
+            <tr><td>Sulfato de calcio</td><td>1 kg</td></tr>
+            <tr><td>Sulfato de magnesio</td><td>1 kg</td></tr>
+            <tr><td>Sulfato de zinc</td><td>1 kg</td></tr>
+            <tr><td>Sulfato de hierro</td><td>300 gr</td></tr>
+            <tr><td>Sulfato de cobre</td><td>300 gr</td></tr>
+            <tr><td>Sulfato de manganeso</td><td>300 gr</td></tr>
+            <tr><td>Diatomeas</td><td>1 kg</td></tr>
+            <tr><td>Roca fosfórica</td><td>1 kg</td></tr>
+            <tr><td>Bórax</td><td>1 kg</td></tr>
+            <tr><td>Harina de pescado</td><td>1 kg</td></tr>
+            <tr><td>Sulfato de potasio</td><td>1 kg</td></tr>
+          </table>
+        </div>
+        <div class="card card-green">
+          <h3>Base líquida + proceso</h3>
+          <table class="dosage-table" style="margin-bottom:1rem">
+            <tr><th>Ingrediente</th><th>Cantidad</th></tr>
+            <tr><td>Suero de leche</td><td>160 litros</td></tr>
+            <tr><td>Melaza (1 caneca)</td><td>~20 litros</td></tr>
+            <tr><td>Ceniza</td><td>4 libras</td></tr>
+            <tr><td>MM sólidos</td><td>10 kg</td></tr>
+          </table>
+          <div class="step-list">
+            <div class="step-item"><div class="step-num">a</div><div class="step-text">Preparar suero + media caneca de melaza + ceniza + MM sólidos en bolsa de tela en el tanque</div></div>
+            <div class="step-item"><div class="step-num">b</div><div class="step-text">Añadir diatomitas, roca fosfórica. Dejar fermentar 4 días</div></div>
+            <div class="step-item"><div class="step-num">c</div><div class="step-text">Disolver las sales y harina de pescado en la otra media caneca de melaza y agregar</div></div>
+            <div class="step-item"><div class="step-num">d</div><div class="step-text">Cerrar y esperar 30 días. Dosis: 1 litro/bomba de 20 L</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="te-estiercol" class="tab-panel">
+      <div class="info-box">El Té de estiércol es un abono orgánico líquido fermentado que libera los nutrientes del estiércol al agua, haciéndolos disponibles para la planta. Se aplica al follaje y en fertiriego.</div>
+      <div class="grid-2">
+        <div class="card card-green">
+          <h3>Ingredientes</h3>
+          <table class="dosage-table">
+            <tr><th>Ingrediente</th><th>Cantidad</th></tr>
+            <tr><td>Estiércol fresco</td><td>12.5 kg</td></tr>
+            <tr><td>Hojas de leguminosa picada</td><td>4 kg</td></tr>
+            <tr><td>Sulpomag o roca fosfórica</td><td>4 kg</td></tr>
+            <tr><td>Leche o suero</td><td>2 litros</td></tr>
+            <tr><td>ME / levadura de pan</td><td>1 galón / 500 gr</td></tr>
+            <tr><td>Melaza o miel de caña</td><td>1 litro</td></tr>
+            <tr><td>Agua</td><td>completar a 200 L</td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h3>Elaboración y diluciones</h3>
+          <div class="step-list">
+            <div class="step-item"><div class="step-num">1</div><div class="step-text">Colocar estiércol + sulpomag + leguminosa en un saco de polipropileno con una piedra de 5 kg como peso</div></div>
+            <div class="step-item"><div class="step-num">2</div><div class="step-text">Agregar agua, leche/suero, melaza y microorganismos</div></div>
+            <div class="step-item"><div class="step-num">3</div><div class="step-text">Cerrar con plástico (dejar pasar el aire) y fermentar 2 semanas</div></div>
+          </div>
+          <div style="margin-top:1rem">
+            <p style="font-weight:500; color:#27500A; margin-bottom:0.5rem; font-size:0.88rem">Diluciones en agua:</p>
+            <div class="badge badge-green">15% foliar suave</div>
+            <div class="badge badge-teal">25% plantas establecidas</div>
+            <div class="badge badge-amber">50% fertiriego al suelo</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="abono-frutas" class="tab-panel">
+      <div class="info-box">El abono de frutas se obtiene del prensado y maceración de frutas maduras, hierbas medicinales y melaza. Rico en elementos fertilizantes, vitaminas y aminoácidos.</div>
+      <div class="grid-2">
+        <div class="card card-coral">
+          <h3>Ingredientes (10 L)</h3>
+          <table class="dosage-table">
+            <tr><th>Ingrediente</th><th>Cantidad</th></tr>
+            <tr><td>Frutas variadas maduras (picadas)</td><td>5 kg</td></tr>
+            <tr><td>Hierbas medicinales (menta, manzanilla, llantén...)</td><td>500 gr</td></tr>
+            <tr><td>Melaza o miel de caña</td><td>4 litros</td></tr>
+          </table>
+          <div style="margin-top:0.75rem">
+            <p style="font-size:0.85rem; font-weight:500; color:#712B13">Nutrientes presentes:</p>
+            <div class="badge badge-coral">Ca · P · Mg · K</div>
+            <div class="badge badge-coral">Cu · Fe · Mn · Zn</div>
+            <div class="badge badge-coral">Aminoácidos</div>
+            <div class="badge badge-coral">Vitaminas · Enzimas</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Proceso y dosis</h3>
+          <div class="step-list">
+            <div class="step-item"><div class="step-num">1</div><div class="step-text">Colocar en capas alternas: 1 kg frutas + 100 gr hierbas + 1 L melaza</div></div>
+            <div class="step-item"><div class="step-num">2</div><div class="step-text">Repetir hasta completar todo el material en la vasija</div></div>
+            <div class="step-item"><div class="step-num">3</div><div class="step-text">Colocar tapa de madera y piedra pesada como prensa</div></div>
+            <div class="step-item"><div class="step-num">4</div><div class="step-text">Filtrar con colador y lienzo. Envasar en recipientes oscuros</div></div>
+          </div>
+          <table class="dosage-table" style="margin-top:0.75rem">
+            <tr><th>Cultivo</th><th>Dosis/20L</th></tr>
+            <tr><td>Almácigos</td><td>50 ml</td></tr>
+            <tr><td>Trasplantes</td><td>100 ml</td></tr>
+            <tr><td>Producción</td><td>250 ml c/8-15 días</td></tr>
+            <tr><td>Hortalizas hoja</td><td>50 ml</td></tr>
+            <tr><td>Hortalizas fruto</td><td>250 ml</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ABONOS SÓLIDOS -->
+<div id="abonos-solidos" class="section">
+  <div class="section-title"><i class="ti ti-mountain"></i> Abonos Sólidos</div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('compost', this, 'sol-tabs')">Compost</button>
+    <button class="tab-btn" onclick="showTab('bocashi', this, 'sol-tabs')">Bocashi</button>
+  </div>
+
+  <div id="sol-tabs">
+    <div id="compost" class="tab-panel active">
+      <div class="info-box">El compost es materia orgánica descompuesta de forma aeróbica. Mejora la estructura del suelo, aporta nutrientes y vida microbiana.</div>
+      <div class="grid-2">
+        <div class="card card-green">
+          <h3>Materiales</h3>
+          <ul>
+            <li><strong>Carbono</strong> (hojas, ramas, cosechas): 2–3 partes</li>
+            <li><strong>Nitrógeno</strong> (estiércol): 1 parte</li>
+            <li>Roca fosfórica, cal agrícola</li>
+            <li>Tierra, agua</li>
+            <li>EMAS, melaza, levadura de pan</li>
+            <li>Inóculo: 250 cc EMAS + 500 ml melaza en 20 L agua por m³</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Estructura de la pila</h3>
+          <table class="dosage-table">
+            <tr><th>Capa</th><th>Material</th><th>Espesor</th></tr>
+            <tr><td>1 (base)</td><td>Material grueso</td><td>2.5 cm</td></tr>
+            <tr><td>2</td><td>Desechos vegetales</td><td>20 cm</td></tr>
+            <tr><td>3</td><td>Estiércol</td><td>10 cm</td></tr>
+            <tr><td>4 (tapa)</td><td>Tierra + cal + roca fosfórica</td><td>2.5 cm</td></tr>
+          </table>
+          <div class="info-box" style="margin-top:0.75rem">
+            <strong>Temperatura:</strong> Inicia 15-20°C → sube 65-70°C → baja a 15°C<br>
+            <strong>Humedad:</strong> mantener 40–60%<br>
+            <strong>Aireadores:</strong> tubos verticales en la pila
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:1rem">
+        <h3>Dosis de aplicación de compost</h3>
+        <table class="dosage-table">
+          <tr><th>Cultivo</th><th>Subcategoría</th><th>Dosis</th><th>Momento</th></tr>
+          <tr><td rowspan="3">Hortalizas</td><td>Sustratos</td><td>1:1:1 arena/compost/tierra</td><td>Preparación</td></tr>
+          <tr><td>Trasplantes</td><td>80–100 g</td><td>Fondo del hoyo</td></tr>
+          <tr><td>Hoja</td><td>500 g</td><td>Cada 30–45 días</td></tr>
+          <tr><td rowspan="2">Ciclo corto</td><td>Arroz</td><td>5–8 TM/ha</td><td>En la rastra</td></tr>
+          <tr><td>Maíz / fréjol</td><td>5 T/ha</td><td>En la rastra</td></tr>
+          <tr><td rowspan="3">Perennes</td><td>Trasplante</td><td>3 kg/planta</td><td>Fondo del hoyo</td></tr>
+          <tr><td>Jóvenes</td><td>2 kg/planta</td><td>Cada 3–4 meses</td></tr>
+          <tr><td>Producción</td><td>5–7 kg/planta</td><td>Cada 3–4 meses</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div id="bocashi" class="tab-panel">
+      <div class="info-box">El Bocashi es un abono fermentado en forma anaeróbica con microorganismos eficientes (EMAS). Estimula enzimas, mejora el intercambio catiónico y las propiedades del suelo.</div>
+      <div class="grid-2">
+        <div class="card card-green">
+          <h3>Ingredientes</h3>
+          <table class="dosage-table">
+            <tr><th>Ingrediente</th><th>Reemplazo</th><th>Cantidad</th></tr>
+            <tr><td>Estiércol de vaca</td><td>Otros estiércoles</td><td>20 sacos</td></tr>
+            <tr><td>Cascarilla de arroz</td><td>Bagazo de caña, pasto</td><td>20 sacos</td></tr>
+            <tr><td>Tierra negra</td><td>Tierra del lugar</td><td>20 sacos</td></tr>
+            <tr><td>Polvillo de arroz</td><td>Salvado de trigo</td><td>1 saco</td></tr>
+            <tr><td>Cisco de carbón</td><td>Ceniza de fogón</td><td>1 saco</td></tr>
+            <tr><td>Microorganismo líquido</td><td>Levadura pan 500g</td><td>20 litros</td></tr>
+            <tr><td>Melaza / miel de caña</td><td>Panela molida</td><td>4 litros</td></tr>
+            <tr><td>Harina de roca</td><td>Roca fosfórica</td><td>1 saco</td></tr>
+            <tr><td>Agua</td><td>Suero de leche</td><td>150 litros</td></tr>
+          </table>
+          <p style="margin-top:0.75rem; font-size:0.85rem; color:#27500A"><strong>Costo por saco: $2.51</strong></p>
+        </div>
+        <div class="card">
+          <h3>Pasos de elaboración</h3>
+          <div class="step-list">
+            <div class="step-item"><div class="step-num">1</div><div class="step-text">Seleccionar el espacio de trabajo</div></div>
+            <div class="step-item"><div class="step-num">2</div><div class="step-text">Colocar 5 sacos de cascarilla de arroz</div></div>
+            <div class="step-item"><div class="step-num">3</div><div class="step-text">Agregar 5 sacos de tierra negra</div></div>
+            <div class="step-item"><div class="step-num">4</div><div class="step-text">Colocar ¼ saco de carbón</div></div>
+            <div class="step-item"><div class="step-num">5</div><div class="step-text">Colocar 6.3 kg de roca fosfórica</div></div>
+            <div class="step-item"><div class="step-num">6</div><div class="step-text">Agregar ¼ saco de polvillo de arroz</div></div>
+            <div class="step-item"><div class="step-num">7</div><div class="step-text">Colocar 5 sacos de gallinaza (u otro estiércol)</div></div>
+            <div class="step-item"><div class="step-num">8</div><div class="step-text">Mezclar la melaza y levadura en 200 L de agua y agregar</div></div>
+            <div class="step-item"><div class="step-num">9</div><div class="step-text">Mezclar hasta homogeneizar. Montón en forma de tumba (máx. 1.20–1.40 m de alto). Prueba del puño para la humedad</div></div>
+          </div>
+          <table class="dosage-table" style="margin-top:0.75rem">
+            <tr><th>Cultivo</th><th>Dosis</th></tr>
+            <tr><td>Trasplante hortalizas hoja</td><td>50–80 g</td></tr>
+            <tr><td>Trasplante hortalizas raíz</td><td>80–150 g</td></tr>
+            <tr><td>Tomate</td><td>250–300 g (reabonar 15 días)</td></tr>
+            <tr><td>Maíz</td><td>50–75 sacos/ha</td></tr>
+            <tr><td>Frutales siembra</td><td>3–5 kg</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOMBRICULTURA -->
+<div id="lombricultura" class="section">
+  <div class="section-title"><i class="ti ti-worm"></i> Vermicultura / Lombricultura</div>
+  <div class="info-box">La vermicultura es la crianza de lombrices para descomponer desechos orgánicos y obtener humus de lombriz (vermicompost), uno de los abonos más ricos disponibles. La lombriz californiana (<em>Eisenia foetida</em>) es la más usada.</div>
+
+  <div class="grid-3">
+    <div class="card card-green" style="text-align:center">
+      <i class="ti ti-chart-line" style="font-size:2rem; color:#3B6D11"></i>
+      <div class="benefit-title">Digestión acelerada</div>
+      <div class="benefit-desc">Su aparato digestivo humifica en pocas horas lo que la naturaleza tarda años</div>
+    </div>
+    <div class="card card-teal" style="text-align:center">
+      <i class="ti ti-arrow-up" style="font-size:2rem; color:#0F6E56"></i>
+      <div class="benefit-title">7x más nutrientes</div>
+      <div class="benefit-desc">El humus tiene 7 veces más N, K, Ca y Mg que el sustrato original</div>
+    </div>
+    <div class="card card-amber" style="text-align:center">
+      <i class="ti ti-heart" style="font-size:2rem; color:#854F0B"></i>
+      <div class="benefit-title">Alta reproducción</div>
+      <div class="benefit-desc">En condiciones óptimas, cada lombriz produce hasta 100 crías cada 3 meses</div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:1rem">
+    <div class="card">
+      <h3><i class="ti ti-home" style="color:#3B6D11"></i> Crianza y condiciones óptimas</h3>
+      <p style="font-size:0.85rem; margin-bottom:0.75rem">Iniciar con 100–1000 lombrices por m². Camas de 1 m de ancho × 25–100 m de largo.</p>
+      <table class="dosage-table">
+        <tr><th>Factor</th><th>Óptimo</th><th>Adecuado</th></tr>
+        <tr><td>pH</td><td>6.5–7.5</td><td>6.0–8.0</td></tr>
+        <tr><td>Humedad</td><td>75%</td><td>70–80%</td></tr>
+        <tr><td>Temperatura</td><td>20°C</td><td>15–24°C</td></tr>
+        <tr><td>Proteína alimento</td><td>13% (expansión)</td><td>7.5–13% (producción)</td></tr>
+      </table>
+    </div>
+    <div class="card card-green">
+      <h3><i class="ti ti-leaf" style="color:#3B6D11"></i> Alimentación</h3>
+      <p style="font-size:0.85rem; margin-bottom:0.75rem">Mezclar 2–3 partes de residuos vegetales + 1 parte de estiércol. Los desechos deben compostarse previamente.</p>
+      <ul style="font-size:0.85rem">
+        <li>Residuos vegetales (cosechas, hierbas)</li>
+        <li>Desechos animales (estiércol, rúmen, sangre)</li>
+        <li>Desechos industriales (textiles, papel)</li>
+        <li>Desechos urbanos y de mercado</li>
+      </ul>
+      <div class="warn-box" style="margin-top:0.75rem; border-radius:8px">
+        Los desechos deben ser sometidos a compostaje previo antes de suministrarse a la lombriz.
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1rem">
+    <h3><i class="ti ti-chart-bar" style="color:#3B6D11"></i> Desarrollo del criadero (inicio con 100.000 lombrices, 2 m²)</h3>
+    <table class="dosage-table">
+      <tr><th>Período</th><th>Lechos</th><th>Superficie (m²)</th><th>Lombrices</th><th>Consumo MO (kg/mes)</th><th>Producción humus</th></tr>
+      <tr><td>1° Trimestre</td><td>1</td><td>2</td><td>100.000</td><td>100</td><td>75 kg</td></tr>
+      <tr><td>2° Trimestre</td><td>2</td><td>4</td><td>200.000</td><td>200</td><td>150 kg</td></tr>
+      <tr><td>3° Trimestre</td><td>4</td><td>8</td><td>400.000</td><td>400</td><td>300 kg</td></tr>
+      <tr><td>4° Trimestre</td><td>8</td><td>16</td><td>800.000</td><td>800</td><td>450 kg</td></tr>
+      <tr><td>1 año</td><td>16</td><td>32</td><td>1.600.000</td><td>1.600</td><td>600 kg</td></tr>
+      <tr><td>2 años</td><td>256</td><td>512</td><td>25.600.000</td><td>25.600</td><td>9.600 kg</td></tr>
+    </table>
+    <p style="font-size:0.85rem; color:#555; margin-top:0.75rem">1 m³ de humus = 450 kg. Primera cosecha: 9° mes. Segunda cosecha en adelante: cada 6 meses.</p>
+  </div>
+</div>
+
+<!-- CALCULADORA -->
+<div id="calculadora" class="section">
+  <div class="section-title"><i class="ti ti-calculator"></i> Calculadora de Bioinsumos</div>
+  <p style="color:#555; margin-bottom:1.5rem; font-size:0.95rem">Selecciona el tipo de bioinsumo y la cantidad que deseas producir. La calculadora escalará automáticamente todos los ingredientes y estimará el costo.</p>
+
+  <div class="grid-2">
+    <div class="calc-container">
+      <div class="calc-header">
+        <h2><i class="ti ti-sliders"></i> Parámetros de producción</h2>
+      </div>
+      <div class="calc-body">
+        <div class="form-group">
+          <label>Tipo de bioinsumo</label>
+          <select id="tipo" onchange="updateUnidad()">
+            <option value="mm-solido">Microorganismos de Montaña (sólido)</option>
+            <option value="mm-liquido">Microorganismos de Montaña (líquido)</option>
+            <option value="emas-te">EMAS en Té (microorganismos líquidos)</option>
+            <option value="biol">Biol básico</option>
+            <option value="superbiol">Súper Biol</option>
+            <option value="te-estiercol">Té de estiércol</option>
+            <option value="abono-frutas">Abono de frutas</option>
+            <option value="bocashi">Bocashi</option>
+            <option value="compost">Compost</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label id="cantidad-label">Cantidad a producir (litros)</label>
+          <input type="number" id="cantidad" value="200" min="1" step="1" oninput="calcular()">
+        </div>
+        <div class="form-group">
+          <label>Base de cálculo de referencia</label>
+          <p id="base-ref" style="font-size:0.85rem; color:#666; padding: 8px 0;">200 litros (rendimiento base)</p>
+        </div>
+        <button class="calc-btn" onclick="calcular()"><i class="ti ti-calculate"></i> Calcular ingredientes</button>
+
+        <div id="result-box" class="result-box">
+          <h3><i class="ti ti-list-check"></i> Ingredientes necesarios</h3>
+          <div id="ingredientes-list"></div>
+          <div id="cost-area"></div>
+          <div id="steps-area" style="margin-top:1rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card card-green" style="margin-bottom:1rem">
+        <h3><i class="ti ti-info-circle" style="color:#3B6D11"></i> ¿Cómo usar la calculadora?</h3>
+        <ol style="padding-left:1.2rem; font-size:0.88rem; color:#444">
+          <li style="margin-bottom:4px">Selecciona el tipo de bioinsumo que quieres elaborar</li>
+          <li style="margin-bottom:4px">Ingresa la cantidad que necesitas producir</li>
+          <li style="margin-bottom:4px">Haz clic en "Calcular ingredientes"</li>
+          <li style="margin-bottom:4px">Revisa la lista de materiales escalada y el costo estimado</li>
+          <li>Consulta los pasos del proceso resumidos</li>
+        </ol>
+      </div>
+      <div class="card card-amber">
+        <h3><i class="ti ti-alert-triangle" style="color:#854F0B"></i> Consideraciones importantes</h3>
+        <ul style="font-size:0.85rem; color:#444; padding-left:1.2rem">
+          <li style="margin-bottom:4px">Los costos son estimados referenciales. Los precios varían por zona y temporada</li>
+          <li style="margin-bottom:4px">Para el bocashi y compost, la cantidad base es en sacos de ~50 kg</li>
+          <li style="margin-bottom:4px">El MM sólido se produce en tandas de 200 L (tanque estándar)</li>
+          <li style="margin-bottom:4px">Fermentaciones: verificar siempre temperatura y humedad</li>
+          <li>Para grandes volúmenes, multiplicar en lotes completos</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const recipes = {
+  "mm-solido": {
+    nombre: "Microorganismos de Montaña (sólido)",
+    unidad: "kg producidos",
+    base: 150,
+    baseDesc: "~150 kg (tanque 200 L)",
+    costoBase: 91.80,
+    ingredientes: [
+      { nombre: "Hojarasca de montaña", cantidad: 200, unidad: "kg (4 sacos)", costoUnit: 2.50 },
+      { nombre: "Polvillo de arroz / salvado de trigo", cantidad: 100, unidad: "kg (2 sacos)", costoUnit: 16 },
+      { nombre: "Melaza (miel de caña)", cantidad: 16, unidad: "litros", costoUnit: 0.55 },
+    ],
+    pasos: [
+      "Mezclar el polvillo de arroz con la hojarasca de montaña.",
+      "Mezclar bien todos los materiales de forma uniforme.",
+      "Realizar amasado manual para homogeneizar.",
+      "Trasvasar la mezcla al tanque de 200 litros.",
+      "Pisonear (compactar) bien el contenido.",
+      "Sellar herméticamente: 45 días en la Sierra / 30 días en la Costa."
+    ]
+  },
+  "mm-liquido": {
+    nombre: "Microorganismos de Montaña (líquido)",
+    unidad: "litros",
+    base: 200,
+    baseDesc: "200 litros (tanque estándar)",
+    costoBase: 70,
+    ingredientes: [
+      { nombre: "MM sólido", cantidad: 5, unidad: "kg", costoUnit: 0.60 },
+      { nombre: "Melaza", cantidad: 4, unidad: "litros", costoUnit: 0.55 },
+      { nombre: "Agua o suero de leche", cantidad: 180, unidad: "litros", costoUnit: 0.05 },
+    ],
+    pasos: [
+      "Colocar el agua o suero de leche en el tanque de 200 L.",
+      "Disolver la melaza en el agua.",
+      "Agregar el MM sólido y mezclar bien.",
+      "Tapar el tanque (con válvula o sello).",
+      "Fermentar: se puede usar a los 3 días (control de lacha), 10 días (fortalecer plantas) o 15 días (mantenimiento)."
+    ]
+  },
+  "emas-te": {
+    nombre: "EMAS en Té (microorganismos líquidos)",
+    unidad: "litros",
+    base: 160,
+    baseDesc: "160 litros (tanque 200 L)",
+    costoBase: 63.50,
+    ingredientes: [
+      { nombre: "Suero de leche (o agua)", cantidad: 160, unidad: "litros", costoUnit: 0.05 },
+      { nombre: "Melaza", cantidad: 10, unidad: "litros", costoUnit: 0.55 },
+      { nombre: "Ceniza de fogón", cantidad: 2, unidad: "kg", costoUnit: 0.15 },
+      { nombre: "Diatomitas", cantidad: 1, unidad: "kg", costoUnit: 6 },
+      { nombre: "Roca fosfórica", cantidad: 2, unidad: "kg", costoUnit: 0.35 },
+      { nombre: "MM sólidos (en bolsa de tela)", cantidad: 10, unidad: "kg", costoUnit: 0.60 },
+    ],
+    pasos: [
+      "Colocar el suero o agua en el tanque de 200 L.",
+      "Añadir la melaza, ceniza, diatomitas y roca fosfórica. Batir bien.",
+      "Colocar los MM sólidos en una bolsa de tela y sumergirla en la mezcla.",
+      "Tapar herméticamente usando una botella de agua con piola como trampa de gases.",
+      "Fermentar 1 mes, o hasta que la botella deje de burbujear.",
+      "Listo cuando tenga olor a chicha y presencia de nata blanca."
+    ]
+  },
+  "biol": {
+    nombre: "Biol básico",
+    unidad: "litros",
+    base: 200,
+    baseDesc: "200 litros",
+    costoBase: 85,
+    ingredientes: [
+      { nombre: "Estiércol fresco de vaca", cantidad: 50, unidad: "kg", costoUnit: 0.20 },
+      { nombre: "Melaza", cantidad: 4, unidad: "litros", costoUnit: 0.55 },
+      { nombre: "Suero de leche", cantidad: 6, unidad: "litros", costoUnit: 0.05 },
+      { nombre: "Ceniza", cantidad: 6, unidad: "kg", costoUnit: 0.15 },
+      { nombre: "Harina de rocas", cantidad: 6, unidad: "kg", costoUnit: 0.50 },
+      { nombre: "Roca fosfórica", cantidad: 5, unidad: "kg", costoUnit: 0.35 },
+      { nombre: "Boro", cantidad: 1.5, unidad: "kg", costoUnit: 3 },
+      { nombre: "Hojas de alfalfa picada", cantidad: 10, unidad: "kg", costoUnit: 0.20 },
+      { nombre: "Levadura", cantidad: 100, unidad: "gr", costoUnit: 0.015 },
+      { nombre: "Agua (completar)", cantidad: 100, unidad: "litros", costoUnit: 0.001 },
+    ],
+    pasos: [
+      "Agregar 100 litros de agua en el tanque de 200 L.",
+      "Incorporar el estiércol, ceniza, harina de roca, melaza y suero de leche.",
+      "Agregar el boro, alfalfa y levadura.",
+      "Remover bien y tapar con la trampa de agua (botella + manguera).",
+      "Fermentar 35–45 días hasta que la botella deje de burbujear.",
+      "Filtrar antes de aplicar."
+    ]
+  },
+  "superbiol": {
+    nombre: "Súper Biol",
+    unidad: "litros",
+    base: 160,
+    baseDesc: "160 litros",
+    costoBase: 92,
+    ingredientes: [
+      { nombre: "Suero de leche", cantidad: 160, unidad: "litros", costoUnit: 0.05 },
+      { nombre: "Melaza (1 caneca)", cantidad: 20, unidad: "litros", costoUnit: 0.55 },
+      { nombre: "Ceniza", cantidad: 2, unidad: "kg", costoUnit: 0.15 },
+      { nombre: "MM sólidos", cantidad: 10, unidad: "kg", costoUnit: 0.60 },
+      { nombre: "Sales minerales (kit)", cantidad: 1, unidad: "kit", costoUnit: 30 },
+      { nombre: "Bolsa de tela", cantidad: 1, unidad: "unidad", costoUnit: 1 },
+    ],
+    pasos: [
+      "Preparar suero + media caneca de melaza + ceniza + MM sólidos en bolsa de tela en el tanque.",
+      "Colocar diatomitas y roca fosfórica (del kit de sales). Dejar fermentar 4 días.",
+      "Disolver las sales minerales y harina de pescado en la otra media caneca de melaza.",
+      "Mezclar las sales disueltas en el tanque y cerrar herméticamente.",
+      "Esperar 30 días desde esa fecha antes de usar.",
+      "Dosis: 1 litro por bomba de 20 litros."
+    ]
+  },
+  "te-estiercol": {
+    nombre: "Té de estiércol",
+    unidad: "litros",
+    base: 200,
+    baseDesc: "200 litros",
+    costoBase: 40,
+    ingredientes: [
+      { nombre: "Estiércol fresco", cantidad: 12.5, unidad: "kg", costoUnit: 0.20 },
+      { nombre: "Hojas de leguminosa picada", cantidad: 4, unidad: "kg", costoUnit: 0.10 },
+      { nombre: "Sulpomag o roca fosfórica", cantidad: 4, unidad: "kg", costoUnit: 0.35 },
+      { nombre: "Leche o suero", cantidad: 2, unidad: "litros", costoUnit: 0.05 },
+      { nombre: "Melaza o miel de caña", cantidad: 1, unidad: "litro", costoUnit: 0.55 },
+      { nombre: "ME / levadura de pan", cantidad: 1, unidad: "galón / 500 gr", costoUnit: 3 },
+      { nombre: "Agua (completar)", cantidad: 170, unidad: "litros", costoUnit: 0.001 },
+    ],
+    pasos: [
+      "Colocar el estiércol + sulpomag + hojas de leguminosa en un saco de polipropileno.",
+      "Poner una piedra de 5 kg dentro del saco como peso.",
+      "Llenar el tanque con agua, leche/suero, melaza y microorganismos.",
+      "Sumergir el saco con los materiales sólidos.",
+      "Cerrar con un plástico, dejando pasar el aire.",
+      "Fermentar por 2 semanas.",
+      "Diluir al 15–50% según el tipo de aplicación."
+    ]
+  },
+  "abono-frutas": {
+    nombre: "Abono de frutas",
+    unidad: "litros",
+    base: 5,
+    baseDesc: "~5 litros (vasija 10 L)",
+    costoBase: 12,
+    ingredientes: [
+      { nombre: "Frutas variadas maduras (picadas)", cantidad: 5, unidad: "kg", costoUnit: 0.50 },
+      { nombre: "Hierbas medicinales (menta, manzanilla...)", cantidad: 0.5, unidad: "kg", costoUnit: 1 },
+      { nombre: "Melaza o miel de caña", cantidad: 4, unidad: "litros", costoUnit: 0.55 },
+    ],
+    pasos: [
+      "En una vasija de plástico o cerámica (10 L), colocar capas alternas: 1 kg de frutas picadas + 100 gr de hierbas + 1 L de melaza.",
+      "Repetir las capas hasta completar todo el material.",
+      "Colocar una tapa de madera que calce dentro de la vasija y poner una piedra pesada como prensa.",
+      "Dejar macerar 7–10 días.",
+      "Sacar el material prensado, filtrar con colador y lienzo.",
+      "Envasar en recipientes oscuros para evitar degradación de principios activos."
+    ]
+  },
+  "bocashi": {
+    nombre: "Bocashi",
+    unidad: "sacos (50 kg c/u)",
+    base: 60,
+    baseDesc: "~60 sacos (3 toneladas)",
+    costoBase: 151,
+    ingredientes: [
+      { nombre: "Estiércol de gallina / vaca", cantidad: 20, unidad: "sacos", costoUnit: 2 },
+      { nombre: "Cascarilla de arroz", cantidad: 20, unidad: "sacos", costoUnit: 2 },
+      { nombre: "Tierra negra", cantidad: 20, unidad: "sacos", costoUnit: 0 },
+      { nombre: "Polvillo de arroz", cantidad: 1, unidad: "quintal", costoUnit: 16 },
+      { nombre: "Cisco de carbón / ceniza", cantidad: 15, unidad: "sacos", costoUnit: 1 },
+      { nombre: "Roca fosfórica", cantidad: 1, unidad: "saco", costoUnit: 16 },
+      { nombre: "Harina de pescado", cantidad: 20, unidad: "libras", costoUnit: 0.35 },
+      { nombre: "Melaza", cantidad: 20, unidad: "litros", costoUnit: 0.55 },
+      { nombre: "Microorganismos líquidos / levadura 500g", cantidad: 1, unidad: "tanda", costoUnit: 7 },
+      { nombre: "Agua / suero de leche", cantidad: 150, unidad: "litros", costoUnit: 0.05 },
+    ],
+    pasos: [
+      "Seleccionar un espacio amplio y bajo sombra.",
+      "Extender por capas: cascarilla → tierra → carbón → roca fosfórica → polvillo → gallinaza.",
+      "Mezclar melaza y levadura en 200 L de agua y agregar a la mezcla.",
+      "Mezclar todo hasta homogeneizar (prueba del puño para humedad).",
+      "Formar un montón en forma de tumba de 1.20–1.40 m de alto máximo.",
+      "Remover cada 2 días durante los primeros 15 días, luego cada 3–4 días.",
+      "Listo a los 30–45 días cuando no huela y esté a temperatura ambiente."
+    ]
+  },
+  "compost": {
+    nombre: "Compost",
+    unidad: "toneladas",
+    base: 1,
+    baseDesc: "1 tonelada",
+    costoBase: 25,
+    ingredientes: [
+      { nombre: "Residuos vegetales (ramas, hojas, cosechas)", cantidad: 600, unidad: "kg", costoUnit: 0.02 },
+      { nombre: "Estiércol animal", cantidad: 250, unidad: "kg", costoUnit: 0.20 },
+      { nombre: "Roca fosfórica", cantidad: 10, unidad: "kg", costoUnit: 0.35 },
+      { nombre: "Cal agrícola", cantidad: 5, unidad: "kg", costoUnit: 0.30 },
+      { nombre: "EMAS (inóculo)", cantidad: 0.25, unidad: "litros", costoUnit: 0.35 },
+      { nombre: "Melaza (inóculo)", cantidad: 0.5, unidad: "litros", costoUnit: 0.55 },
+      { nombre: "Agua (mantener humedad 40-60%)", cantidad: 200, unidad: "litros", costoUnit: 0.001 },
+    ],
+    pasos: [
+      "Preparar el área con aireadores (tubos o palos verticales).",
+      "Disponer capas: material grueso (2.5 cm) → desechos vegetales (20 cm) → estiércol (10 cm) → tierra+cal+roca fosfórica (2.5 cm).",
+      "Aplicar el inóculo (250 cc EMAS + 500 ml melaza en 20 L agua por cada m³) en cada capa.",
+      "Mantener humedad del 40–60% (prueba del puño).",
+      "Voltear cada 7–10 días. Temperatura: sube a 65–70°C y luego baja.",
+      "Listo a los 60–90 días cuando tenga olor a tierra húmeda de bosque y temperatura ambiente."
+    ]
+  }
+};
+
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function showTab(id, btn, container) {
+  const parent = document.getElementById(container);
+  parent.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(container).parentElement.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function updateUnidad() {
+  const tipo = document.getElementById('tipo').value;
+  const r = recipes[tipo];
+  document.getElementById('cantidad-label').textContent = 'Cantidad a producir (' + r.unidad + ')';
+  document.getElementById('base-ref').textContent = 'Base de referencia: ' + r.baseDesc + ' — costo estimado $' + r.costoBase.toFixed(2);
+  document.getElementById('cantidad').value = r.base;
+  document.getElementById('result-box').style.display = 'none';
+}
+
+function calcular() {
+  const tipo = document.getElementById('tipo').value;
+  const cantidad = parseFloat(document.getElementById('cantidad').value) || 0;
+  const r = recipes[tipo];
+  const factor = cantidad / r.base;
+  const resultBox = document.getElementById('result-box');
+  resultBox.style.display = 'block';
+
+  let html = '';
+  let costoTotal = 0;
+  r.ingredientes.forEach(ing => {
+    const cantEscalada = ing.cantidad * factor;
+    let cantDisplay;
+    if (cantEscalada >= 100) cantDisplay = Math.round(cantEscalada).toLocaleString();
+    else if (cantEscalada >= 10) cantDisplay = parseFloat(cantEscalada.toFixed(1)).toLocaleString();
+    else cantDisplay = parseFloat(cantEscalada.toFixed(2)).toLocaleString();
+
+    let costoIng = 0;
+    if (ing.nombre.includes('Agua') || ing.nombre.includes('agua')) {
+      costoIng = cantEscalada * ing.costoUnit;
+    } else if (ing.unidad === 'gr') {
+      costoIng = (ing.cantidad / 1000) * ing.costoUnit * factor;
+    } else if (ing.unidad === 'sacos' || ing.unidad === 'quintal') {
+      costoIng = cantEscalada * ing.costoUnit;
+    } else {
+      costoIng = cantEscalada * ing.costoUnit;
+    }
+    costoTotal += costoIng;
+
+    html += '<div class="ingredient-row">';
+    html += '<span class="ingredient-name">' + ing.nombre + '</span>';
+    html += '<span class="ingredient-amount">' + cantDisplay + ' ' + ing.unidad + '</span>';
+    html += '</div>';
+  });
+
+  document.getElementById('ingredientes-list').innerHTML = html;
+
+  const costoTotalFinal = r.costoBase * factor;
+  document.getElementById('cost-area').innerHTML = 
+    '<div class="cost-box"><span class="cost-label">Costo total estimado</span><span class="cost-value">$' + costoTotalFinal.toFixed(2) + '</span></div>' +
+    '<div class="cost-box" style="margin-top:6px;"><span class="cost-label">Costo por ' + r.unidad + '</span><span class="cost-value">$' + (costoTotalFinal / cantidad).toFixed(3) + '</span></div>';
+
+  let stepsHtml = '<div style="margin-top:1rem; border-top:1px solid #d4e9c2; padding-top:1rem"><p style="font-weight:600; color:#27500A; margin-bottom:0.75rem; font-size:0.88rem"><i class="ti ti-list-numbers"></i> Pasos del proceso</p>';
+  r.pasos.forEach((paso, i) => {
+    stepsHtml += '<div class="step-item"><div class="step-num">' + (i+1) + '</div><div class="step-text">' + paso + '</div></div>';
+  });
+  stepsHtml += '</div>';
+  document.getElementById('steps-area').innerHTML = stepsHtml;
+}
+
+updateUnidad();
+</script>
+</body>
+</html>
