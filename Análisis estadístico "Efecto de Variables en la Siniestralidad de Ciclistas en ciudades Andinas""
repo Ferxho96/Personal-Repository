@@ -1,0 +1,1454 @@
+library(mlogit)
+datos$ID <-1:nrow(datos)
+###########################################
+datos$accidentes_dic<-as.factor(datos$accidentes_dic)
+
+############################
+data_mlogit <- mlogit.data(
+  datos,
+  choice = "choice",
+  shape = "long",
+  alt.var = "accidentes_dic",
+  id.var = "ID"
+)
+
+
+
+m <- glm( accidentes_dic~ edad + genero, data = datos, family = binomial(link="logit"))
+summary(m)
+
+#########################################################################
+
+# =========================================
+# TESIS - MODELO LOGÍSTICO BINARIO INICIAL
+# Base: datos_limpios100.xlsx
+# 5 ciudades: Cuenca, Loja, Ibarra, Tulcán, Riobamba
+# =========================================
+
+# =========================================
+# 1. LIBRERÍAS
+# =========================================
+library(readxl)
+library(dplyr)
+library(mlogit)
+
+# =========================================
+# 2. CARGAR BASE
+# =========================================
+datos <- read_excel("C:/Users/chris/Downloads/datos_limpios100.xlsx")
+
+# Revisar nombres de variables
+names(datos)
+
+# =========================================
+# 3. FILTRAR A LAS 5 CIUDADES DE ESTUDIO
+# =========================================
+datos <- datos %>%
+  mutate(
+    ciudad = tolower(trimws(ciudad))
+  ) %>%
+  filter(ciudad %in% c("cuenca", "loja", "ibarra", "tulcan", "riobamba"))
+
+# Verificar distribución por ciudad
+table(datos$ciudad, useNA = "ifany")
+
+# =========================================
+# 4. CREAR ID
+# =========================================
+datos$ID <- 1:nrow(datos)
+
+# =========================================
+# 5. REVISAR VARIABLE DEPENDIENTE
+# =========================================
+table(datos$accidentes_dic, useNA = "ifany")
+
+# =========================================
+# 6. RECODIFICAR accidentes_dic A 0/1
+# =========================================
+# Este bloque sirve si la variable está como texto o mezclada
+datos <- datos %>%
+  mutate(
+    accidentes_dic = case_when(
+      accidentes_dic %in% c("si", "sí", "Si", "Sí", "SI", "SÍ", 1, "1") ~ 1,
+      accidentes_dic %in% c("no", "No", "NO", 0, "0") ~ 0,
+      TRUE ~ NA_real_
+    )
+  )
+
+# Verificar nuevamente
+table(datos$accidentes_dic, useNA = "ifany")
+
+# =========================================
+# 7. AJUSTAR VARIABLES EXPLICATIVAS
+# =========================================
+datos <- datos %>%
+  mutate(
+    edad   = as.numeric(edad),
+    genero = as.factor(genero)
+  )
+
+# Revisar género
+table(datos$genero, useNA = "ifany")
+
+# =========================================
+# 8. DEJAR BASE SOLO CON VARIABLES DEL MODELO
+# =========================================
+datos_modelo <- datos %>%
+  select(ID, ciudad, accidentes_dic, edad, genero) %>%
+  filter(
+    !is.na(accidentes_dic),
+    !is.na(edad),
+    !is.na(genero)
+  )
+
+# Revisar tamaño final
+dim(datos_modelo)
+summary(datos_modelo)
+
+# =========================================
+# 9. BLOQUE MLOGIT (SOLO PREPARACIÓN)
+# =========================================
+# Lo dejamos creado por si luego lo necesito
+# pero por ahora NO lo uso para estimar el modelo binario.
+
+datos_modelo$choice <- datos_modelo$accidentes_dic
+
+# Si intentas usar mlogit.data() así como está abajo,
+# probablemente no servirá aún para tu caso actual,
+# porque mlogit requiere una estructura específica.
+# Lo dejamos comentado como referencia del script del profesor.
+
+# data_mlogit <- mlogit.data(
+#   datos_modelo,
+#   choice = "choice",
+#   shape = "long",
+#   alt.var = "accidentes_dic",
+#   id.var = "ID"
+# )
+
+# =========================================
+# 10. MODELO LOGÍSTICO BINARIO
+# =========================================
+m <- glm(
+  accidentes_dic ~ edad + genero,
+  data = datos_modelo,
+  family = binomial(link = "logit")
+)
+
+summary(m)
+
+# =========================================
+# 11. ODDS RATIOS
+# =========================================
+exp(coef(m))
+
+# Intervalos de confianza para OR
+exp(confint(m))
+
+# =========================================
+# 12. PROBABILIDADES PREDICHAS
+# =========================================
+datos_modelo$prob_predicha <- predict(m, type = "response")
+
+head(datos_modelo$prob_predicha)
+
+# =========================================
+# 13. TABLA SIMPLE DE RESULTADOS
+# =========================================
+resultado <- data.frame(
+  Variable = names(coef(m)),
+  Coeficiente = coef(m),
+  OR = exp(coef(m))
+)
+
+print(resultado)
+
+
+# =========================================
+# INTERPRETACIÓN DEL MODELO 1 (BASE)
+# =========================================
+# Se estimó un modelo logístico binario inicial con la variable dependiente
+# accidentes_dic (1 = ha sufrido al menos un siniestro; 0 = no ha sufrido siniestros),
+# incorporando como variables explicativas la edad y el género.
+#
+# Resultados principales:
+# - La edad presentó un OR cercano a 1, por lo que no mostró una asociación clara
+#   con la probabilidad de reportar siniestros en este modelo base.
+# - El género (mujer, tomando como referencia hombre) mostró un OR menor a 1,
+#   sugiriendo menores odds de siniestro en mujeres; sin embargo, el intervalo
+#   de confianza incluyó el valor 1, por lo que el efecto no fue estadísticamente
+#   concluyente.
+#
+# Conclusión del modelo 1:
+# - El modelo base sirve como punto de partida y control inicial.
+# - No se observaron asociaciones estadísticamente robustas para edad ni género.
+# - Se justifica avanzar hacia modelos con variables más sustantivas,
+#   especialmente de exposición y comportamiento ciclista.
+
+###################################################
+#Modelo 2
+
+# =========================================
+# LIMPIAR VARIABLES DE EXPOSICIÓN
+# =========================================
+datos <- datos %>%
+  mutate(
+    horas_bici_semana = as.numeric(horas_bici_semana),
+    duracion_viaje_bici_min = as.numeric(duracion_viaje_bici_min)
+  )
+
+summary(datos$horas_bici_semana)
+summary(datos$duracion_viaje_bici_min)
+
+datos_modelo2 <- datos %>%
+  select(
+    ID, ciudad, accidentes_dic,
+    edad, genero,
+    horas_bici_semana,
+    duracion_viaje_bici_min
+  ) %>%
+  filter(
+    ciudad %in% c("quito", "cuenca"), # <--- Nueva línea para filtrar ciudades
+    !is.na(accidentes_dic),
+    !is.na(edad),
+    !is.na(genero),
+    !is.na(horas_bici_semana),
+    !is.na(duracion_viaje_bici_min)
+  )
+
+dim(datos_modelo2)
+
+
+m2 <- glm(
+  accidentes_dic ~ edad + genero +
+    horas_bici_semana + duracion_viaje_bici_min,
+  data = datos_modelo2,
+  family = binomial(link = "logit")
+)
+
+summary(m2)
+
+# Odds Ratios
+exp(coef(m2))
+exp(confint(m2))
+
+AIC(m, m2)
+
+
+# =========================================
+# RESUMEN NUMÉRICO CLAVE DEL MODELO 2
+# =========================================
+# horas_bici_semana:
+#   Coeficiente = 0.319
+#   OR = 1.376
+#   IC 95% = [1.167 ; 1.678]
+#   p-valor = 0.000537
+#
+# Interpretación:
+#   A mayor número de horas de uso semanal de la bicicleta,
+#   mayor probabilidad de reportar siniestros.
+#
+# Comparación de ajuste:
+#   AIC modelo base = 138.35
+#   AIC modelo 2    = 118.23
+#   => El modelo 2 presenta mejor ajuste.
+
+# =========================================
+# LECTURA GENERAL DE LOS RESULTADOS HASTA AQUÍ
+# =========================================
+# Hasta este punto, el análisis muestra que las variables sociodemográficas
+# incluidas en el modelo base (edad y género) no explican de forma clara la
+# ocurrencia de siniestros en la muestra analizada.
+#
+# En cambio, al incorporar variables de exposición, se observa que las horas
+# de uso de bicicleta por semana sí constituyen un factor asociado relevante.
+# Este hallazgo sugiere que la mayor exposición acumulada al tráfico y al entorno vial
+# incrementa la probabilidad de que un ciclista reporte haber sufrido un siniestro.
+#
+# Por ello, el siguiente paso del análisis será evaluar variables de comportamiento,
+# especialmente aquellas relacionadas con distracción y uso del celular durante el viaje.
+
+
+#############################################################
+# =========================================
+# TESIS - MODELO LOGÍSTICO BINARIO
+# Bike Barometer - Ciudades intermedias
+# Autor: Paúl Naranjo
+# =========================================
+
+# =========================================
+# 1. LIBRERÍAS
+# =========================================
+library(readxl)
+library(dplyr)
+library(mlogit)
+
+# =========================================
+# 2. CARGA DE DATOS
+# =========================================
+datos <- read_excel("C:/Users/User/Documents/Tesis_Paul/Tesis_Paul/Exploracion_datos_nuevo/datos_limpios100.xlsx")
+
+# Ver nombres de variables
+names(datos)
+
+# =========================================
+# 3. FILTRADO DE CIUDADES DE ESTUDIO
+# =========================================
+datos <- datos %>%
+  mutate(ciudad = tolower(trimws(ciudad))) %>%
+  filter(ciudad %in% c("cuenca", "loja", "ibarra", "tulcan", "riobamba"))
+
+# Ver distribución
+table(datos$ciudad)
+
+# =========================================
+# 4. CREACIÓN DE IDENTIFICADOR
+# =========================================
+datos$ID <- 1:nrow(datos)
+
+# =========================================
+# 5. VARIABLE DEPENDIENTE
+# =========================================
+table(datos$accidentes_dic)
+
+# Recodificación a binaria (0/1)
+datos <- datos %>%
+  mutate(
+    accidentes_dic = case_when(
+      accidentes_dic %in% c("si", "sí", "Si", "Sí", "SI", "SÍ", 1, "1") ~ 1,
+      accidentes_dic %in% c("no", "No", "NO", 0, "0") ~ 0,
+      TRUE ~ NA_real_
+    )
+  )
+
+table(datos$accidentes_dic)
+
+# =========================================
+# 6. VARIABLES EXPLICATIVAS (MODELO BASE)
+# =========================================
+datos <- datos %>%
+  mutate(
+    edad   = as.numeric(edad),
+    genero = as.factor(genero)
+  )
+
+table(datos$genero)
+
+# =========================================
+# 7. BASE PARA MODELO 1
+# =========================================
+datos_modelo <- datos %>%
+  select(ID, ciudad, accidentes_dic, edad, genero) %>%
+  filter(
+    !is.na(accidentes_dic),
+    !is.na(edad),
+    !is.na(genero)
+  )
+
+dim(datos_modelo)
+summary(datos_modelo)
+
+# =========================================
+# 8. MODELO 1: BASE
+# =========================================
+m <- glm(
+  accidentes_dic ~ edad + genero,
+  data = datos_modelo,
+  family = binomial(link = "logit")
+)
+
+summary(m)
+
+# Odds Ratios
+exp(coef(m))
+exp(confint(m))
+
+# =========================================
+# INTERPRETACIÓN MODELO 1
+# =========================================
+# Se estimó un modelo logístico binario inicial con edad y género.
+#
+# Resultados:
+# - Edad: no presenta asociación significativa con siniestros.
+# - Género: mujeres muestran menores odds que hombres, pero sin significancia estadística.
+#
+# Conclusión:
+# - Las variables sociodemográficas no explican por sí solas la ocurrencia de siniestros.
+# - Se requiere incorporar variables más sustantivas (exposición y comportamiento).
+
+# =========================================
+# 9. VARIABLES DE EXPOSICIÓN
+# =========================================
+datos <- datos %>%
+  mutate(
+    horas_bici_semana = as.numeric(horas_bici_semana),
+    duracion_viaje_bici_min = as.numeric(duracion_viaje_bici_min)
+  )
+
+summary(datos$horas_bici_semana)
+summary(datos$duracion_viaje_bici_min)
+
+# =========================================
+# 10. BASE PARA MODELO 2
+# =========================================
+datos_modelo2 <- datos %>%
+  select(
+    ID, ciudad, accidentes_dic,
+    edad, genero,
+    horas_bici_semana,
+    duracion_viaje_bici_min
+  ) %>%
+  filter(
+    !is.na(accidentes_dic),
+    !is.na(edad),
+    !is.na(genero),
+    !is.na(horas_bici_semana),
+    !is.na(duracion_viaje_bici_min)
+  )
+
+dim(datos_modelo2)
+
+# =========================================
+# 11. MODELO 2: EXPOSICIÓN
+# =========================================
+m2 <- glm(
+  accidentes_dic ~ edad + genero +
+    horas_bici_semana + duracion_viaje_bici_min,
+  data = datos_modelo2,
+  family = binomial(link = "logit")
+)
+
+summary(m2)
+
+# Odds Ratios
+exp(coef(m2))
+exp(confint(m2))
+
+# Comparación de modelos
+AIC(m, m2)
+
+# =========================================
+# INTERPRETACIÓN MODELO 2
+# =========================================
+# Se incorporaron variables de exposición al uso de la bicicleta.
+#
+# Resultados:
+# - horas_bici_semana: asociación positiva y estadísticamente significativa.
+#   OR ≈ 1.38 → por cada hora adicional semanal, aumentan las odds de siniestro.
+#
+# - duracion_viaje_bici_min: no significativa.
+# - edad: no significativa.
+# - género: no significativo.
+#
+# Evaluación:
+# - AIC disminuye de 138.35 a 118.23 → mejora sustancial del modelo.
+#
+# Conclusión:
+# - La exposición acumulada al uso de bicicleta es un factor clave.
+# - Este resultado es consistente con la teoría de riesgo por exposición.
+# - Se justifica avanzar hacia variables de comportamiento.
+
+# =========================================
+# 12. PROBABILIDADES PREDICHAS
+# =========================================
+datos_modelo2$prob_predicha <- predict(m2, type = "response")
+
+head(datos_modelo2$prob_predicha)
+
+# =========================================
+# 13. RESUMEN GENERAL
+# =========================================
+# Hasta este punto:
+# - El modelo base no explica bien los siniestros.
+# - La exposición semanal sí emerge como variable clave.
+# - El modelo mejora significativamente al incorporar horas de uso.
+#
+# Siguiente paso:
+# - Incorporar variables de comportamiento (uso de celular, distracción).
+
+
+
+########################################################
+
+# =========================================
+# LIMPIAR VARIABLE CONTINUA
+# =========================================
+datos <- datos %>%
+  mutate(
+    frecuencia_uso_celular_reaccion_distraccion = 
+      as.numeric(frecuencia_uso_celular_reaccion_distraccion)
+  )
+
+summary(datos$frecuencia_uso_celular_reaccion_distraccion)
+
+#MODELO 3 (VERSIÓN CONTÍNUA)
+
+# =========================================
+# MODELO 3A: VARIABLE CONTINUA
+# =========================================
+datos_modelo3A <- datos %>%
+  select(
+    ID, ciudad, accidentes_dic,
+    edad, genero,
+    horas_bici_semana,
+    frecuencia_uso_celular_reaccion_distraccion
+  ) %>%
+  filter(
+    !is.na(accidentes_dic),
+    !is.na(edad),
+    !is.na(genero),
+    !is.na(horas_bici_semana),
+    !is.na(frecuencia_uso_celular_reaccion_distraccion)
+  )
+
+m3A <- glm(
+  accidentes_dic ~ edad + genero +
+    horas_bici_semana +
+    frecuencia_uso_celular_reaccion_distraccion,
+  data = datos_modelo3A,
+  family = binomial(link = "logit")
+)
+
+summary(m3A)
+
+# Odds ratios
+exp(coef(m3A))
+exp(confint(m3A))
+
+######################################### VARIABLE frecuencia_uso_celular_reaccion_distraccion
+# =========================================
+# DICOTOMIZACIÓN
+# =========================================
+datos <- datos %>%
+  mutate(
+    distraccion_alta = case_when(
+      frecuencia_uso_celular_reaccion_distraccion >= 4 ~ 1,
+      frecuencia_uso_celular_reaccion_distraccion <= 3 ~ 0,
+      TRUE ~ NA_real_
+    )
+  )
+
+table(datos$distraccion_alta, useNA = "ifany")
+
+# MODELO 3 VERSIÓN DICOTOMICA 
+
+# =========================================
+# MODELO 3B: VARIABLE DICOTÓMICA
+# =========================================
+datos_modelo3B <- datos %>%
+  select(
+    ID, ciudad, accidentes_dic,
+    edad, genero,
+    horas_bici_semana,
+    distraccion_alta
+  ) %>%
+  filter(
+    !is.na(accidentes_dic),
+    !is.na(edad),
+    !is.na(genero),
+    !is.na(horas_bici_semana),
+    !is.na(distraccion_alta)
+  )
+
+m3B <- glm(
+  accidentes_dic ~ edad + genero +
+    horas_bici_semana + distraccion_alta,
+  data = datos_modelo3B,
+  family = binomial(link = "logit")
+)
+
+summary(m3B)
+
+# Odds ratios
+exp(coef(m3B))
+exp(confint(m3B))
+
+# =========================================
+# COMPARACIÓN DE MODELOS 
+# =========================================
+AIC(m2, m3A, m3B)
+
+# =========================================
+# INTERPRETACIÓN MODELO 3A (CONTINUA)
+# =========================================
+# En este modelo se incorporó la variable
+# frecuencia_uso_celular_reaccion_distraccion en su forma original
+# (tratada como continua/ordinal), junto con edad, género y horas de uso
+# semanal de la bicicleta.
+#
+# Resultados principales:
+# - horas_bici_semana mantuvo una asociación positiva y estadísticamente
+#   significativa con la probabilidad de reportar siniestros.
+# - Su OR fue aproximadamente 1.43, lo que indica que, manteniendo constantes
+#   las demás variables, por cada hora adicional de uso semanal de la bicicleta,
+#   aumentan las odds de haber sufrido un siniestro.
+#
+# - La variable frecuencia_uso_celular_reaccion_distraccion mostró un OR > 1,
+#   lo que sugiere una relación positiva en dirección esperada; sin embargo,
+#   el efecto no fue estadísticamente significativo.
+# - El intervalo de confianza al 95% incluyó el valor 1, por lo que no existe
+#   evidencia suficiente para afirmar una asociación robusta en esta muestra.
+#
+# Evaluación:
+# - El AIC del modelo 3A (118.65) fue ligeramente mayor al del modelo 2 (118.23),
+#   por lo que la incorporación de esta variable no mejoró el ajuste del modelo.
+#
+# Conclusión:
+# - Aunque la dirección del efecto es coherente con la hipótesis teórica
+#   (mayor distracción, mayor probabilidad de siniestro), la evidencia empírica
+#   en esta muestra no es concluyente.
+# - El resultado puede estar influido por el tamaño de muestra, la forma de
+#   medición autoreportada de la variable o la baja variabilidad efectiva
+#   del comportamiento.
+
+# =========================================
+# INTERPRETACIÓN MODELO 3B (DICOTÓMICA)
+# =========================================
+# En este modelo se evaluó la misma dimensión de distracción, pero mediante
+# una versión dicotomizada:
+# - 0 = menor nivel de distracción
+# - 1 = mayor nivel de distracción
+#
+# Resultados principales:
+# - horas_bici_semana volvió a mantener una asociación positiva y significativa
+#   con la probabilidad de siniestro, confirmando su estabilidad como predictor.
+#
+# - La variable distraccion_alta presentó un OR > 1, lo que indicaría mayores
+#   odds de siniestro en quienes reportan alta distracción; sin embargo,
+#   este efecto no fue estadísticamente significativo.
+# - El intervalo de confianza fue amplio e incluyó el valor 1, lo que refleja
+#   alta incertidumbre en la estimación.
+#
+# Evaluación:
+# - El AIC del modelo 3B (119.07) fue mayor tanto que el modelo 2 como que el modelo 3A.
+# - Esto indica que la dicotomización de la variable no mejoró el ajuste del modelo;
+#   por el contrario, produjo un desempeño ligeramente inferior.
+#
+# Conclusión:
+# - En este caso, dicotomizar la variable de distracción no aportó mejoras
+#   analíticas ni interpretativas suficientes.
+# - La evidencia sugiere que esta variable, al menos en esta especificación,
+#   no constituye un predictor robusto de siniestros.
+
+################################################ MODELO VERSION 4
+
+# =========================================
+# LIMPIAR VARIABLE PERCEPCIÓN DE RIESGO frec_riesgo_uso_telefono_bici
+# =========================================
+datos <- datos %>%
+  mutate(
+    frec_riesgo_uso_telefono_bici = as.numeric(frec_riesgo_uso_telefono_bici)
+  )
+
+summary(datos$frec_riesgo_uso_telefono_bici)
+
+# =========================================
+# MODELO 4A: PERCEPCIÓN DE RIESGO (CONTINUA)
+# =========================================
+datos_modelo4A <- datos %>%
+  select(
+    ID, ciudad, accidentes_dic,
+    edad, genero,
+    horas_bici_semana,
+    frec_riesgo_uso_telefono_bici
+  ) %>%
+  filter(
+    !is.na(accidentes_dic),
+    !is.na(edad),
+    !is.na(genero),
+    !is.na(horas_bici_semana),
+    !is.na(frec_riesgo_uso_telefono_bici)
+  )
+
+m4A <- glm(
+  accidentes_dic ~ edad + genero +
+    horas_bici_semana +
+    frec_riesgo_uso_telefono_bici,
+  data = datos_modelo4A,
+  family = binomial(link = "logit")
+)
+
+summary(m4A)
+
+exp(coef(m4A))
+exp(confint(m4A))
+
+
+# =========================================
+# DICOTOMIZACIÓN PERCEPCIÓN DE RIESGO
+# =========================================
+datos <- datos %>%
+  mutate(
+    riesgo_alto = case_when(
+      frec_riesgo_uso_telefono_bici >= 4 ~ 1,
+      frec_riesgo_uso_telefono_bici <= 3 ~ 0,
+      TRUE ~ NA_real_
+    )
+  )
+
+table(datos$riesgo_alto, useNA = "ifany")
+
+# =========================================
+# MODELO 4B: PERCEPCIÓN DE RIESGO (DICOTÓMICA)
+# =========================================
+datos_modelo4B <- datos %>%
+  select(
+    ID, ciudad, accidentes_dic,
+    edad, genero,
+    horas_bici_semana,
+    riesgo_alto
+  ) %>%
+  filter(
+    !is.na(accidentes_dic),
+    !is.na(edad),
+    !is.na(genero),
+    !is.na(horas_bici_semana),
+    !is.na(riesgo_alto)
+  )
+
+m4B <- glm(
+  accidentes_dic ~ edad + genero +
+    horas_bici_semana + riesgo_alto,
+  data = datos_modelo4B,
+  family = binomial(link = "logit")
+)
+
+summary(m4B)
+
+exp(coef(m4B))
+exp(confint(m4B))
+
+
+###############COMPARACION
+AIC(m2, m4A, m4B)
+
+
+# =========================================
+# INTERPRETACIÓN MODELO 4 (PERCEPCIÓN DE RIESGO)
+# =========================================
+# Se evaluó la variable frec_riesgo_uso_telefono_bici en forma continua
+# y dicotomizada, con el objetivo de analizar si la percepción de riesgo
+# del uso del celular influye en la ocurrencia de siniestros.
+#
+# Resultados:
+# - La variable no presentó asociación estadísticamente significativa
+#   en ninguna de sus especificaciones.
+# - El odds ratio fue cercano a 1 en el modelo continuo, indicando
+#   ausencia de efecto.
+# - En el modelo dicotomizado, el efecto tampoco fue significativo y
+#   presentó alta incertidumbre.
+#
+# Evaluación:
+# - El AIC fue mayor que en el modelo 2, lo que indica que la inclusión
+#   de esta variable no mejora el ajuste del modelo.
+#
+# Interpretación:
+# - La percepción de riesgo no parece traducirse en una reducción
+#   efectiva del riesgo de siniestros en la muestra analizada.
+# - Esto sugiere una posible desconexión entre el conocimiento del riesgo
+#   y el comportamiento real de los ciclistas.
+#
+# Conclusión:
+# - La exposición (horas de uso) sigue siendo el predictor más robusto.
+# - La percepción de riesgo no constituye un factor explicativo relevante
+#   en este modelo.
+
+
+########################################### MODELO 5 frecuencia_uso_celular_redes_sociales
+
+# =========================================
+# LIMPIAR VARIABLE REDES SOCIALES
+# =========================================
+datos <- datos %>%
+  mutate(
+    frecuencia_uso_celular_redes_sociales = 
+      as.numeric(frecuencia_uso_celular_redes_sociales)
+  )
+
+summary(datos$frecuencia_uso_celular_redes_sociales)
+
+
+# =========================================
+# MODELO 5A: REDES SOCIALES (CONTINUA)
+# =========================================
+datos_modelo5A <- datos %>%
+  select(
+    ID, ciudad, accidentes_dic,
+    edad, genero,
+    horas_bici_semana,
+    frecuencia_uso_celular_redes_sociales
+  ) %>%
+  filter(
+    !is.na(accidentes_dic),
+    !is.na(edad),
+    !is.na(genero),
+    !is.na(horas_bici_semana),
+    !is.na(frecuencia_uso_celular_redes_sociales)
+  )
+
+m5A <- glm(
+  accidentes_dic ~ edad + genero +
+    horas_bici_semana +
+    frecuencia_uso_celular_redes_sociales,
+  data = datos_modelo5A,
+  family = binomial(link = "logit")
+)
+
+summary(m5A)
+
+exp(coef(m5A))
+exp(confint(m5A))
+
+
+####################MODELO DICOTOMIZADO
+
+# =========================================
+# DICOTOMIZAR REDES SOCIALES
+# =========================================
+datos <- datos %>%
+  mutate(
+    redes_sociales_alta = case_when(
+      frecuencia_uso_celular_redes_sociales >= 4 ~ 1,
+      frecuencia_uso_celular_redes_sociales <= 3 ~ 0,
+      TRUE ~ NA_real_
+    )
+  )
+
+table(datos$redes_sociales_alta, useNA = "ifany")
+
+
+# =========================================
+# MODELO 5B: REDES SOCIALES (DICOTÓMICA)
+# =========================================
+datos_modelo5B <- datos %>%
+  select(
+    ID, ciudad, accidentes_dic,
+    edad, genero,
+    horas_bici_semana,
+    redes_sociales_alta
+  ) %>%
+  filter(
+    !is.na(accidentes_dic),
+    !is.na(edad),
+    !is.na(genero),
+    !is.na(horas_bici_semana),
+    !is.na(redes_sociales_alta)
+  )
+
+m5B <- glm(
+  accidentes_dic ~ edad + genero +
+    horas_bici_semana + redes_sociales_alta,
+  data = datos_modelo5B,
+  family = binomial(link = "logit")
+)
+
+summary(m5B)
+
+exp(coef(m5B))
+exp(confint(m5B))
+
+
+###########COMPARACION
+
+AIC(m2, m5A, m5B)
+
+# =========================================
+# INTERPRETACIÓN MODELO 5 (REDES SOCIALES)
+# =========================================
+# Se evaluó la variable frecuencia_uso_celular_redes_sociales en forma
+# continua y dicotomizada, con el objetivo de analizar su relación con
+# la ocurrencia de siniestros.
+#
+# Resultados:
+# - La variable no presentó asociación estadísticamente significativa
+#   en ninguna de sus especificaciones.
+# - El odds ratio fue cercano a 1 en el modelo continuo, indicando
+#   ausencia de efecto.
+# - En el modelo dicotomizado, el efecto fue inestable debido a la baja
+#   frecuencia de casos en la categoría de alto uso.
+#
+# Evaluación:
+# - El AIC fue mayor que en el modelo 2, lo que indica que la inclusión
+#   de esta variable no mejora el ajuste del modelo.
+#
+# Interpretación:
+# - La baja variabilidad de la variable limita su capacidad explicativa.
+# - Además, el uso de redes sociales durante el ciclismo puede estar
+#   subreportado en la encuesta.
+#
+# Conclusión:
+# - La variable no constituye un predictor relevante en este modelo.
+# - Se reafirma la exposición semanal como el factor más robusto.
+
+
+###########################DICOTOMIZACIÓN CON OTRO CRITERIO (3-5 ALTO)
+
+# =========================================
+# NUEVA DICOTOMIZACIÓN (3–5 = ALTO)
+# =========================================
+datos <- datos %>%
+  mutate(
+    redes_sociales_alta_v2 = case_when(
+      frecuencia_uso_celular_redes_sociales >= 3 ~ 1,
+      frecuencia_uso_celular_redes_sociales <= 2 ~ 0,
+      TRUE ~ NA_real_
+    )
+  )
+
+table(datos$redes_sociales_alta_v2, useNA = "ifany")
+
+datos_modelo5C <- datos %>%
+  select(
+    ID, ciudad, accidentes_dic,
+    edad, genero,
+    horas_bici_semana,
+    redes_sociales_alta_v2
+  ) %>%
+  filter(
+    !is.na(accidentes_dic),
+    !is.na(edad),
+    !is.na(genero),
+    !is.na(horas_bici_semana),
+    !is.na(redes_sociales_alta_v2)
+  )
+
+m5C <- glm(
+  accidentes_dic ~ edad + genero +
+    horas_bici_semana + redes_sociales_alta_v2,
+  data = datos_modelo5C,
+  family = binomial(link = "logit")
+)
+
+summary(m5C)
+
+exp(coef(m5C))
+exp(confint(m5C))
+
+AIC(m2, m5B, m5C)
+
+
+#######################################################NUEVO MODELO 6 conciencia_problemas_senalizacion_infraestructura_seguridad
+
+# =========================================
+# LIMPIEZA VARIABLE INFRAESTRUCTURA
+# =========================================
+datos <- datos %>%
+  mutate(
+    conciencia_problemas_infraestructura =
+      as.numeric(conciencia_problemas_infraestructura)
+  )
+
+summary(datos$conciencia_problemas_infraestructura)
+
+# =========================================
+# BASE MODELO INFRAESTRUCTURA
+# =========================================
+datos_modelo6A <- datos %>%
+  select(
+    ID, ciudad, accidentes_dic,
+    edad, genero,
+    horas_bici_semana,
+    conciencia_problemas_infraestructura
+  ) %>%
+  filter(
+    ciudad %in% c("quito", "cuenca"), # <--- Nueva línea para filtrar ciudades
+    !is.na(accidentes_dic),
+    !is.na(edad),
+    !is.na(genero),
+    !is.na(horas_bici_semana),
+    !is.na(conciencia_problemas_infraestructura)
+  )
+
+dim(datos_modelo6A)
+
+# =========================================
+# MODELO CORREGIDO (SIN WARNING)
+# =========================================
+m6A <- glm(
+  accidentes_dic ~ edad + genero +
+    horas_bici_semana +
+    conciencia_problemas_infraestructura,
+  data = datos_modelo6A,
+  family = binomial(link = "logit")
+)
+
+summary(m6A)
+
+# =========================================
+# ODDS RATIOS
+# =========================================
+exp(coef(m6A))
+exp(confint(m6A))
+
+# =========================================
+# COMPARACIÓN CON MODELO BASE
+# =========================================
+AIC(m2, m6A)
+
+# =========================================
+# INTERPRETACIÓN
+# =========================================
+# Se incorporó la variable conciencia_problemas_infraestructura como
+# variable continua en el modelo logístico.
+#
+# Resultados:
+# - horas_bici_semana se mantiene como predictor significativo y robusto.
+# - La variable de infraestructura presenta un OR > 1, lo que sugiere que
+#   a mayor percepción de problemas, mayor probabilidad de siniestro.
+#
+# Interpretación:
+# - Este resultado puede reflejar condiciones reales del entorno vial,
+#   donde los ciclistas expuestos a infraestructuras deficientes presentan
+#   mayor riesgo.
+# - También puede estar influido por la experiencia previa de siniestros,
+#   que incrementa la percepción de problemas.
+#
+# Conclusión:
+# - La variable no es estadísticamente significativa, pero mejora ligeramente
+#   el ajuste del modelo y presenta una dirección coherente con la teoría.
+
+
+
+#############################################VARIABLE DE ENTORNO URBANO
+
+# =========================================
+# LIMPIEZA VARIABLE: PERCEPCIÓN DE RIESGO
+# =========================================
+datos <- datos %>%
+  mutate(
+    percepcion_riesgo_circulacion_entorno_urbano =
+      as.numeric(percepcion_riesgo_circulacion_entorno_urbano)
+  )
+
+summary(datos$percepcion_riesgo_circulacion_entorno_urbano)
+
+# =========================================
+# BASE MODELO 6B
+# =========================================
+datos_modelo6B <- datos %>%
+  select(
+    ID, ciudad, accidentes_dic,
+    edad, genero,
+    horas_bici_semana,
+    percepcion_riesgo_circulacion_entorno_urbano
+  ) %>%
+  filter(
+    !is.na(accidentes_dic),
+    !is.na(edad),
+    !is.na(genero),
+    !is.na(horas_bici_semana),
+    !is.na(percepcion_riesgo_circulacion_entorno_urbano)
+  )
+
+dim(datos_modelo6B)
+
+# =========================================
+# MODELO 6B
+# =========================================
+m6B <- glm(
+  accidentes_dic ~ edad + genero +
+    horas_bici_semana +
+    percepcion_riesgo_circulacion_entorno_urbano,
+  data = datos_modelo6B,
+  family = binomial(link = "logit")
+)
+
+summary(m6B)
+
+# =========================================
+# ODDS RATIOS
+# =========================================
+exp(coef(m6B))
+exp(confint(m6B))
+
+# =========================================
+# COMPARACIÓN DE MODELOS
+# =========================================
+AIC(m2, m6A, m6B)
+
+
+
+##############################################################MODELO7
+
+# =========================================
+# LIMPIAR VARIABLE: USO VISUAL-MANUAL
+# =========================================
+datos <- datos %>%
+  mutate(
+    frecuencia_uso_celular_tarea_visual_manual =
+      as.numeric(frecuencia_uso_celular_tarea_visual_manual)
+  )
+
+summary(datos$frecuencia_uso_celular_tarea_visual_manual)
+
+# =========================================
+# BASE MODELO 7A
+# =========================================
+
+# Convertimos "Sí" a 1 y "No" a 0
+datos$accidentes_dic <- ifelse(datos$accidentes_dic == "Si", 1, 0)
+
+datos_modelo7A <- datos %>%
+  select(
+    ID, ciudad, accidentes_dic,
+    edad, genero,
+    horas_bici_semana,
+    frecuencia_uso_celular_tarea_visual_manual
+  ) %>%
+  filter(
+    ciudad %in% c("quito", "cuenca"), # <--- Nueva línea para filtrar ciudades
+    !is.na(accidentes_dic),
+    !is.na(edad),
+    !is.na(genero),
+    !is.na(horas_bici_semana),
+    !is.na(frecuencia_uso_celular_tarea_visual_manual)
+  )
+
+# =========================================
+# MODELO 7A
+# =========================================
+
+m7A <- glm(
+  accidentes_dic ~ edad + genero +
+    horas_bici_semana +
+    frecuencia_uso_celular_tarea_visual_manual,
+  datos_modelo7A,
+  family = binomial(link = "logit")
+)
+
+summary(m7A)
+
+exp(coef(m7A))
+exp(confint(m7A))
+
+# =========================================
+# COMPARACIÓN
+# =========================================
+AIC(m2, m6A, m7A)
+
+
+# =========================================
+# INTERPRETACIÓN MODELO 7A (USO VISUAL-MANUAL)
+# =========================================
+# Se incorporó la variable frecuencia_uso_celular_tarea_visual_manual
+# como indicador de comportamiento de riesgo.
+#
+# Resultados:
+# - horas_bici_semana se mantiene como predictor significativo.
+# - La variable visual-manual presenta un OR ≈ 1.26, sugiriendo que
+#   a mayor frecuencia de uso, aumentan las odds de siniestro.
+#
+# Evaluación:
+# - El efecto no es estadísticamente significativo.
+# - Sin embargo, el modelo presenta el menor AIC hasta el momento,
+#   indicando mejor ajuste relativo.
+#
+# Interpretación:
+# - El uso del celular que implica atención visual y manipulación manual
+#   podría incrementar el riesgo al interferir directamente con la conducción.
+#
+# Conclusión:
+# - Esta variable representa la mejor aproximación conductual encontrada,
+#   complementando el efecto robusto de la exposición.
+
+
+
+########################################Alternativa MODELO 7
+
+# =========================================
+# LIMPIAR VARIABLE CORRECTAMENTE
+# =========================================
+datos <- datos %>%
+  mutate(
+    frecuencia_uso_celular_atencion_visual =
+      as.numeric(frecuencia_uso_celular_atencion_visual)
+  )
+
+summary(datos$frecuencia_uso_celular_atencion_visual)
+
+# =========================================
+# MODELO CORREGIDO
+# =========================================
+m7B_fix <- glm(
+  accidentes_dic ~ edad + genero +
+    horas_bici_semana +
+    frecuencia_uso_celular_atencion_visual,
+  data = datos,
+  family = binomial(link = "logit")
+)
+
+summary(m7B_fix)
+
+exp(coef(m7B_fix))
+exp(confint(m7B_fix))
+
+AIC(m2, m6A, m7A, m7B_fix)
+
+# =========================================
+# COMPARACIÓN FINAL DE VARIABLES CONDUCTUALES
+# =========================================
+# Se evaluaron distintas variables relacionadas con el uso del celular:
+#
+# - Redes sociales
+# - Distracción general
+# - Atención visual
+# - Uso visual-manual
+#
+# Resultados:
+# - La variable frecuencia_uso_celular_tarea_visual_manual presenta
+#   la asociación más consistente (OR > 1 y mejor AIC).
+#
+# - La variable de atención visual presenta un efecto positivo débil
+#   (OR ≈ 1.08), pero no significativo.
+#
+# Interpretación:
+# - No todo uso del celular tiene el mismo impacto en el riesgo.
+# - El uso que implica interacción manual y atención visual simultánea
+#   parece ser más relevante para la ocurrencia de siniestros.
+#
+# Conclusión:
+# - El modelo con mejor desempeño es aquel que incorpora exposición
+#   y uso visual-manual del celular.
+
+
+##########################################################################MODELO8
+
+# =========================================
+# LIMPIAR VARIABLE: DISTANCIA EVITAR ACCIDENTE
+# =========================================
+datos <- datos %>%
+  mutate(
+    frecuencia_distancia_evitar_accidente =
+      as.numeric(frecuencia_distancia_evitar_accidente)
+  )
+
+summary(datos$frecuencia_distancia_evitar_accidente)
+
+# Verificar tipo de variable
+str(datos$frecuencia_distancia_evitar_accidente)
+
+
+# =========================================
+# BASE MODELO 8A
+# =========================================
+datos_modelo8A <- datos %>%
+  select(
+    ID, ciudad, accidentes_dic,
+    edad, genero,
+    horas_bici_semana,
+    frecuencia_distancia_evitar_accidente
+  ) %>%
+  filter(
+    !is.na(accidentes_dic),
+    !is.na(edad),
+    !is.na(genero),
+    !is.na(horas_bici_semana),
+    !is.na(frecuencia_distancia_evitar_accidente)
+  )
+
+dim(datos_modelo8A)
+
+# =========================================
+# MODELO 8A
+# =========================================
+m8A <- glm(
+  accidentes_dic ~ edad + genero +
+    horas_bici_semana +
+    frecuencia_distancia_evitar_accidente,
+  data = datos_modelo8A,
+  family = binomial(link = "logit")
+)
+
+summary(m8A)
+
+# =========================================
+# ODDS RATIOS
+# =========================================
+exp(coef(m8A))
+exp(confint(m8A))
+
+# =========================================
+# COMPARACIÓN DE MODELOS
+# =========================================
+AIC(m2, m6A, m7A, m8A)
+
+# =========================================
+# INTERPRETACIÓN MODELO 8A (CONDUCTA DEFENSIVA)
+# =========================================
+# Se evaluó la variable frecuencia_distancia_evitar_accidente
+# como indicador de comportamiento defensivo.
+#
+# Resultados:
+# - La variable presenta un OR > 1, lo que indica una asociación
+#   positiva con la ocurrencia de siniestros.
+# - Sin embargo, el efecto no es estadísticamente significativo.
+#
+# Interpretación:
+# - Este resultado puede reflejar que los ciclistas más expuestos
+#   al riesgo tienden a adoptar conductas defensivas con mayor frecuencia.
+# - Es decir, la conducta defensiva podría ser una respuesta al riesgo
+#   y no un factor protector en sí mismo.
+#
+# Conclusión:
+# - La variable no mejora el modelo ni actúa como factor protector.
+# - Su comportamiento sugiere posibles efectos de causalidad inversa.
+
+############################MODELO 9
+
+# =========================================
+# LIMPIAR VARIABLE: CONOCIMIENTO ZONAS PROHIBIDAS
+# =========================================
+datos <- datos %>%
+  mutate(
+    conocimiento_zonas_prohibidas_bici =
+      as.numeric(conocimiento_zonas_prohibidas_bici)
+  )
+
+# Resumen de la variable
+summary(datos$conocimiento_zonas_prohibidas_bici)
+
+# Verificar tipo (debe ser numérica)
+str(datos$conocimiento_zonas_prohibidas_bici)
+
+# =========================================
+# BASE MODELO 9A
+# =========================================
+datos_modelo9A <- datos %>%
+  select(
+    ID, ciudad, accidentes_dic,
+    edad, genero,
+    horas_bici_semana,
+    conocimiento_zonas_prohibidas_bici
+  ) %>%
+  filter(
+    !is.na(accidentes_dic),
+    !is.na(edad),
+    !is.na(genero),
+    !is.na(horas_bici_semana),
+    !is.na(conocimiento_zonas_prohibidas_bici)
+  )
+
+# Ver tamaño de la muestra
+dim(datos_modelo9A)
+
+# =========================================
+# MODELO 9A
+# =========================================
+m9A <- glm(
+  accidentes_dic ~ edad + genero +
+    horas_bici_semana +
+    conocimiento_zonas_prohibidas_bici,
+  data = datos_modelo9A,
+  family = binomial(link = "logit")
+)
+
+# Resultados
+summary(m9A)
+
+# =========================================
+# ODDS RATIOS
+# =========================================
+exp(coef(m9A))
+exp(confint(m9A))
+
+# =========================================
+# COMPARACIÓN DE MODELOS
+# =========================================
+AIC(m2, m6A, m7A, m8A, m9A)
+
+
+
+##############################################
+
+#MODELO UNIFICADO POR VARIABLES
+
+# =========================================
+# LIMPIEZA DE VARIABLES
+# =========================================
+datos <- datos %>%
+  mutate(
+    frecuencia_uso_celular_tarea_visual_manual =
+      as.numeric(frecuencia_uso_celular_tarea_visual_manual),
+    
+    conciencia_problemas_infraestructura =
+      as.numeric(conciencia_problemas_infraestructura)
+  )
+
+# Verificación (MUY IMPORTANTE)
+str(datos$frecuencia_uso_celular_tarea_visual_manual)
+str(datos$conciencia_problemas_infraestructura)
+
+# =========================================
+# BASE MODELO FINAL
+# =========================================
+datos_modelo_final <- datos %>%
+  select(
+    ID, ciudad, accidentes_dic,
+    edad, genero,
+    horas_bici_semana,
+    frecuencia_uso_celular_tarea_visual_manual,
+    conciencia_problemas_infraestructura
+  ) %>%
+  filter(
+    !is.na(accidentes_dic),
+    !is.na(edad),
+    !is.na(genero),
+    !is.na(horas_bici_semana),
+    !is.na(frecuencia_uso_celular_tarea_visual_manual),
+    !is.na(conciencia_problemas_infraestructura)
+  )
+
+dim(datos_modelo_final)
+
+# =========================================
+# MODELO MULTIVARIADO FINAL
+# =========================================
+m_final <- glm(
+  accidentes_dic ~ edad + genero +
+    horas_bici_semana +
+    frecuencia_uso_celular_tarea_visual_manual +
+    conciencia_problemas_infraestructura,
+  data = datos_modelo_final,
+  family = binomial(link = "logit")
+)
+
+summary(m_final)
+
+# =========================================
+# ODDS RATIOS
+# =========================================
+exp(coef(m_final))
+exp(confint(m_final))
+
+# =========================================
+# COMPARACIÓN
+# =========================================
+AIC(m2, m6A, m7A, m_final)
+
+
+# =========================================
+# INTERPRETACIÓN MODELO MULTIVARIADO FINAL
+# =========================================
+# Se estimó un modelo logístico multivariado incorporando variables de
+# exposición, comportamiento y entorno.
+#
+# Resultados:
+# - horas_bici_semana se mantiene como predictor significativo (OR ≈ 1.42).
+# - frecuencia_uso_celular_tarea_visual_manual presenta un OR ≈ 1.28,
+#   sugiriendo un aumento del riesgo.
+# - conciencia_problemas_infraestructura presenta un OR ≈ 1.61,
+#   indicando una asociación positiva con los siniestros.
+#
+# Evaluación:
+# - Ninguna de las variables adicionales alcanza significancia estadística,
+#   pero mantienen una dirección coherente con la teoría.
+#
+# Interpretación:
+# - La exposición es el factor más robusto.
+# - Las variables conductuales y estructurales muestran asociaciones
+#   consistentes, aunque no concluyentes en esta muestra.
+#
+# Conclusión:
+# - El riesgo de siniestros en ciclistas parece estar determinado
+#   principalmente por la exposición, complementado por factores
+#   conductuales y del entorno.
